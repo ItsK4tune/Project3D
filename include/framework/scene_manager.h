@@ -15,26 +15,26 @@ public:
     SceneManager(const SceneManager &) = delete;
     SceneManager &operator=(const SceneManager &) = delete;
 
-    bool LoadFromFile(const std::string& filePath);
-    bool AddFromFile(const std::string& filePath);
-    bool AddObject(const std::shared_ptr<Object>& object);
-    bool AddHUD(const std::shared_ptr<HUD>& hud);
-    bool SetCamera(const std::shared_ptr<Camera>& camera);
+    void LoadFromFile(const std::string& filePath);
     void Cleanup();
     
     std::shared_ptr<Camera> GetCamera() const { return camera; }
-    std::vector<std::shared_ptr<Object>> GetObjects() const { return objects; }
+    std::unordered_map<std::string, std::shared_ptr<Object>> GetObjects() const { return objects; }
     std::unordered_map<std::string, std::shared_ptr<HUD>> GetHUDs() const { return huds; }
     
+    void DeactivateAll();
+    void ActiveAll();
+    void DeactivateObject(const std::string& id);
+    void ActivateObject(const std::string& id);
+
     void Update(float deltaTime);
-    
     void Draw();
     void DrawHUD();
 
 private:
     std::shared_ptr<Camera> camera;
 
-    std::vector<std::shared_ptr<Object>> objects;
+    std::unordered_map<std::string, std::shared_ptr<Object>> objects;
     std::unordered_map<std::string, std::shared_ptr<HUD>> huds; 
 
     SceneManager() = default;

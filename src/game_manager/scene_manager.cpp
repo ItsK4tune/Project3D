@@ -16,22 +16,17 @@ SceneManager::~SceneManager()
     Cleanup();
 }
 
-bool SceneManager::LoadFromFile(const std::string &filePath)
+void SceneManager::LoadFromFile(const std::string &filePath)
 {
     Cleanup();
-    return AddFromFile(filePath);
-}
-
-bool SceneManager::AddFromFile(const std::string &filePath)
-{
-    std::cout << "[SceneManager::AddFromFile] Loading scene..." << std::endl;
+    std::cout << "[SceneManager::LoadFromFile] Loading scene..." << std::endl;
     std::string fullPath = "resource/script/" + filePath;
 
     std::ifstream file(fullPath);
     if (!file.is_open())
     {
-        std::cerr << "[SceneManager::AddFromFile] Cannot open file: " << filePath << std::endl;
-        return false;
+        std::cerr << "[SceneManager::LoadFromFile] Cannot open file: " << filePath << std::endl;
+        return;
     }
 
     std::string line;
@@ -72,7 +67,7 @@ bool SceneManager::AddFromFile(const std::string &filePath)
             }
 
             camera = std::make_shared<Camera>(45.0f, 0.1f, 100.0f, pos, target, up);
-            std::cout << "[SceneManager::AddFromFile] Loaded camera: POS("
+            std::cout << "[SceneManager::LoadFromFile] Loaded camera: POS("
                       << pos.x << "," << pos.y << "," << pos.z
                       << ") TARGET(" << target.x << "," << target.y << "," << target.z
                       << ") UP(" << up.x << "," << up.y << "," << up.z << ")\n";
@@ -125,24 +120,24 @@ bool SceneManager::AddFromFile(const std::string &filePath)
 
                 if (!model)
                 {
-                    std::cerr << "[SceneManager::AddFromFile] Object[" << id << "] missing model: " << modelID << std::endl;
+                    std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing model: " << modelID << std::endl;
                     continue;
                 }
                 if (!shader)
                 {
-                    std::cerr << "[SceneManager::AddFromFile] Object[" << id << "] missing shader: " << shaderID << std::endl;
+                    std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing shader: " << shaderID << std::endl;
                     continue;
                 }
                 if (!texture && textureID != "-1")
                 {
-                    std::cerr << "[SceneManager::AddFromFile] Object[" << id << "] missing texture: " << textureID << std::endl;
+                    std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing texture: " << textureID << std::endl;
                     continue;
                 }
 
-                objects.push_back(std::make_shared<Object>(model, shader, texture, pos, rot, scale));
+                objects[id] = std::make_shared<Object>(model, shader, texture, pos, rot, scale);
             }
 
-            std::cout << "[SceneManager::AddFromFile] Loaded " << count << " objects." << std::endl;
+            std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " objects." << std::endl;
             continue;
         }
 
@@ -191,52 +186,19 @@ bool SceneManager::AddFromFile(const std::string &filePath)
                 huds[id] = std::make_shared<HUD>(model, shader, texture, pos, rot, scale);
             }
 
-            std::cout << "[SceneManager::AddFromFile] Loaded " << count << " HUDs." << std::endl;
+            std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " HUDs." << std::endl;
             continue;
         }
     }
 
     if (!camera)
     {
-        std::cout << "[SceneManager::AddFromFile] Loaded default camera: POS(0,0,3) TARGET(0,0,0) UP(0,1,0)\n";
+        std::cout << "[SceneManager::LoadFromFile] Loaded default camera: POS(0,0,3) TARGET(0,0,0) UP(0,1,0)\n";
         camera = std::make_shared<Camera>(45.0f, 0.1f, 100.0f);
     }
 
-    std::cout << "[SceneManager::AddFromFile] Finished loading scene" << std::endl;
-    return true;
-}
-
-bool SceneManager::AddObject(const std::shared_ptr<Object> &object)
-{
-    if (!object)
-    {
-        std::cerr << "[SceneManager::AddObject] Invalid object." << std::endl;
-        return false;
-    }
-    objects.push_back(object);
-    return true;
-}
-
-bool SceneManager::AddHUD(const std::shared_ptr<HUD> &hud)
-{
-    if (!hud)
-    {
-        std::cerr << "[SceneManager::AddHUD] Invalid HUD." << std::endl;
-        return false;
-    }
-    huds["HUD_" + std::to_string(huds.size())] = hud;
-    return true;
-}
-
-bool SceneManager::SetCamera(const std::shared_ptr<Camera> &cam)
-{
-    if (!cam)
-    {
-        std::cerr << "[SceneManager::SetCamera] Invalid camera." << std::endl;
-        return false;
-    }
-    camera = cam;
-    return true;
+    std::cout << "[SceneManager::LoadFromFile] Finished loading scene" << std::endl;
+    return;
 }
 
 void SceneManager::Cleanup()
@@ -244,6 +206,42 @@ void SceneManager::Cleanup()
     objects.clear();
     huds.clear();
     camera.reset();
+}
+
+void SceneManager::DeactivateAll()
+{
+    for (auto &pair : objects)
+    {
+        if (pair.second)
+            pair.second->SetActive(false);
+    }
+}
+
+void SceneManager::ActiveAll()
+{
+    for (auto &pair : objects)
+    {
+        if (pair.second)
+            pair.second->SetActive(true);
+    }
+}
+
+void SceneManager::DeactivateObject(const std::string& id)
+{
+    auto it = objects.find(id);
+    if (it != objects.end() && it->second)
+    {
+        it->second->SetActive(false);
+    }
+}
+
+void SceneManager::ActivateObject(const std::string& id)
+{
+    auto it = objects.find(id);
+    if (it != objects.end() && it->second)
+    {
+        it->second->SetActive(true);
+    }
 }
 
 void SceneManager::Update(float deltaTime)
@@ -281,8 +279,9 @@ void SceneManager::Draw()
     glm::mat4 viewMatrix = camera->GetViewMatrix();
     glm::mat4 projectionMatrix = camera->GetPerspectiveMatrix();
 
-    for (const auto &obj : objects)
+    for (const auto &pair : objects)
     {
+        const auto& obj = pair.second;
         if (obj)
             obj->Draw(viewMatrix, projectionMatrix);
     }
