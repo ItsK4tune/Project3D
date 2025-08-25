@@ -1,6 +1,6 @@
 ﻿#include <iostream>
 #include "global.h"
-#include "window.h"
+#include "game.h"
 
 #define OPENGL_MAJOR 4
 #define OPENGL_MINOR 6
@@ -9,10 +9,10 @@ int main()
 {
     try
     {
-        auto window = Window::Create(OPENGL_MAJOR, OPENGL_MINOR, "GLFW + GLAD");
-        window->SetCallback();
-        window->Initialize();
-        window->MainLoop();
+        auto game = Game::Create(OPENGL_MAJOR, OPENGL_MINOR, "GLFW + GLAD");
+        game->SetCallback();
+        game->Initialize();
+        game->MainLoop();
     }
     catch (const std::exception& e)
     {
