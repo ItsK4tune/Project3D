@@ -52,3 +52,9 @@ glm::mat4 Camera::GetOrthosMatrix() const
                       -Global::ScreenHeight, Global::ScreenHeight,
                       m_near, m_far);
 }
+
+void Camera::Move(const glm::vec3& delta)
+{
+    m_position += delta;
+    m_target += delta;
+}

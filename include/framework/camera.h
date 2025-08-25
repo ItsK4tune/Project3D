@@ -12,9 +12,15 @@ public:
     void SetTarget(const glm::vec3& target);
     void SetUp(const glm::vec3& up);
 
+    glm::vec3 GetPosition() const { return m_position; }
+    glm::vec3 GetTarget() const { return m_target; }
+    glm::vec3 GetUp() const { return m_up; }
+
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetPerspectiveMatrix() const;
     glm::mat4 GetOrthosMatrix() const;
+    
+    void Move(const glm::vec3& delta);
 
 private:
     glm::vec3 m_position;

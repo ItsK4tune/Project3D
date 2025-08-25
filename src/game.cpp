@@ -4,9 +4,10 @@
 #include "scene_manager.h"
 #include "mouse_manager.h"
 #include "global.h"
+#include "game_state/GSPlay.h"
 
 Game::Game(int major, int minor, const std::string &title)
-    : m_window(nullptr), m_title(title), m_major(major), m_minor(minor)
+    : m_window(nullptr), m_title(title), m_major(major), m_minor(minor), m_stateMachine(std::make_unique<StateMachine>())
 {
     if (!glfwInit())
     {
@@ -89,19 +90,25 @@ void Game::SetCallback()
 
 void Game::Initialize()
 {
-    ResourceManager::Instance().LoadFromFile("load/test.txt");
-    SceneManager::Instance().LoadFromFile("scene/test.txt");
+    m_stateMachine->Push(std::make_unique<GSplay>());
 }
 
 void Game::MainLoop()
 {
+    float lastTime = glfwGetTime();
+    
     while (!glfwWindowShouldClose(m_window))
     {
+        float currentTime = glfwGetTime();
+        float deltaTime   = currentTime - lastTime;
+        lastTime = currentTime;
+
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        SceneManager::Instance().Draw();
+        m_stateMachine->Update(deltaTime, m_window);
+        m_stateMachine->Render();
 
         glfwSwapBuffers(m_window);
         glfwPollEvents();
