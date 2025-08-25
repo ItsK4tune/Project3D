@@ -2,6 +2,7 @@
 #include <iostream>
 #include "resource_manager.h"
 #include "scene_manager.h"
+#include "mouse_manager.h"
 #include "global.h"
 
 Window::Window(int major, int minor, const std::string &title)
@@ -47,7 +48,43 @@ std::unique_ptr<Window> Window::Create(int major, int minor, const std::string &
 void Window::SetCallback()
 {
     glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow *window, int width, int height)
-                                   { glViewport(0, 0, width, height); });
+    {
+        glViewport(0, 0, width, height);
+    });
+
+    glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods)
+    {
+        if (button == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            double xpos, ypos;
+            glfwGetCursorPos(window, &xpos, &ypos);
+
+            int winW, winH;
+            glfwGetWindowSize(window, &winW, &winH);
+            int fbW, fbH;
+            glfwGetFramebufferSize(window, &fbW, &fbH);
+
+            xpos = xpos * fbW / winW;
+            ypos = ypos * fbH / winH;
+
+            bool isPressed = (action == GLFW_PRESS);
+
+            MouseManager::Instance().OnMouseClickEvent((GLint)xpos, (GLint)ypos, isPressed);
+        }
+    });
+
+    glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xpos, double ypos)
+    {
+        int winW, winH;
+        glfwGetWindowSize(window, &winW, &winH);
+        int fbW, fbH;
+        glfwGetFramebufferSize(window, &fbW, &fbH);
+
+        xpos = xpos * fbW / winW;
+        ypos = ypos * fbH / winH;
+
+        MouseManager::Instance().OnMouseMoveEvent((GLint)xpos, (GLint)ypos);
+    });
 }
 
 void Window::Initialize()

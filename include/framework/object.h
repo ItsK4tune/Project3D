@@ -17,6 +17,7 @@ public:
     void SetModel(std::shared_ptr<Model> m) { model = m; }
     void SetTexture(std::shared_ptr<Texture> t) { texture = t; }
     void SetShader(std::shared_ptr<Shader> s) { shader = s; }
+    void SetActive(bool active) { isActive = active; }
 
     glm::vec3 GetPosition() const { return position; }
     glm::vec3 GetRotation() const { return rotation; }
@@ -24,6 +25,7 @@ public:
     std::shared_ptr<Model> GetModel() const { return model; }
     std::shared_ptr<Texture> GetTexture() const { return texture; }
     std::shared_ptr<Shader> GetShader() const { return shader; }
+    bool IsActive() const { return isActive; }
 
     void Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
 
@@ -35,6 +37,8 @@ private:
     glm::vec3 position;
     glm::vec3 rotation;
     glm::vec3 scale;
+
+    bool isActive = true;
 
     glm::mat4 GetWorldMatrix() const;
 };

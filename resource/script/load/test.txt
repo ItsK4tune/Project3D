@@ -1,0 +1,8 @@
+#Model 1
+ID M_TEST
+FILE "resource/model/test.fbx"
+#Texture 0
+#Shader 1
+ID S_NO_TEXTURE
+VS "resource/shader/no_texture.vs"
+FS "resource/shader/no_texture.fs"

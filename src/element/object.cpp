@@ -24,7 +24,7 @@ glm::mat4 Object::GetWorldMatrix() const
 
 void Object::Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix)
 {
-    if (!model || !shader)
+    if (!model || !shader || !isActive)
         return;
 
     shader->Use();

@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include "object.h"
+#include "hud.h"
 #include "camera.h"
 
 class SceneManager
@@ -17,13 +18,13 @@ public:
     bool LoadFromFile(const std::string& filePath);
     bool AddFromFile(const std::string& filePath);
     bool AddObject(const std::shared_ptr<Object>& object);
-    bool AddHUD(const std::shared_ptr<Object>& hud);
+    bool AddHUD(const std::shared_ptr<HUD>& hud);
     bool SetCamera(const std::shared_ptr<Camera>& camera);
     void Cleanup();
     
     std::shared_ptr<Camera> GetCamera() const { return camera; }
     std::vector<std::shared_ptr<Object>> GetObjects() const { return objects; }
-    std::unordered_map<std::string, std::shared_ptr<Object>> GetHUDs() const { return huds; }
+    std::unordered_map<std::string, std::shared_ptr<HUD>> GetHUDs() const { return huds; }
     
     void Update(float deltaTime);
     
@@ -34,7 +35,7 @@ private:
     std::shared_ptr<Camera> camera;
 
     std::vector<std::shared_ptr<Object>> objects;
-    std::unordered_map<std::string, std::shared_ptr<Object>> huds; 
+    std::unordered_map<std::string, std::shared_ptr<HUD>> huds; 
 
     SceneManager() = default;
     ~SceneManager();

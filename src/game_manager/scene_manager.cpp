@@ -188,7 +188,7 @@ bool SceneManager::AddFromFile(const std::string &filePath)
                     texture = ResourceManager::Instance().GetTexture(textureID);
                 auto shader = ResourceManager::Instance().GetShader(shaderID);
 
-                huds[id] = std::make_shared<Object>(model, shader, texture, pos, rot, scale);
+                huds[id] = std::make_shared<HUD>(model, shader, texture, pos, rot, scale);
             }
 
             std::cout << "[SceneManager::AddFromFile] Loaded " << count << " HUDs." << std::endl;
@@ -217,7 +217,7 @@ bool SceneManager::AddObject(const std::shared_ptr<Object> &object)
     return true;
 }
 
-bool SceneManager::AddHUD(const std::shared_ptr<Object> &hud)
+bool SceneManager::AddHUD(const std::shared_ptr<HUD> &hud)
 {
     if (!hud)
     {
@@ -255,11 +255,11 @@ void SceneManager::DrawHUD()
 {
     if (!camera)
     {
-        std::cerr << "[SceneManager::Draw] No camera set." << std::endl;
+        std::cerr << "[SceneManager::DrawHUD] No camera set." << std::endl;
         return;
     }
 
-    glm::mat4 viewMatrix = camera->GetViewMatrix();
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 orthosMatrix = camera->GetOrthosMatrix();
 
     for (const auto &pair : huds)
