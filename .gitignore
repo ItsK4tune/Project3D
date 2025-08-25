@@ -1,0 +1,8 @@
+# IDE folders
+.vs/
+.vscode/
+
+# Build folders
+BIN/
+BUILD/**/*.exe
+BUILD/**/*.pdb
