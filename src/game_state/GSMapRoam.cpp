@@ -29,11 +29,11 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
     auto camera = SceneManager::Instance().GetCamera();
     auto &mouse = MouseManager::Instance();
 
-    const float speed = 2.5f * deltaTime;
+    const float speed = 0.25f * deltaTime;
     const float edgeThreshold = 50.0f;
-    const float moveLerpSpeed = 0.5f * deltaTime;
-    const float rotateLerpSpeed = 0.5f * deltaTime;
-    const float stopThreshold = 0.1f;
+    const float moveLerpSpeed = 0.1f * deltaTime;
+    const float rotateLerpSpeed = 0.1f * deltaTime;
+    const float stopThreshold = 0.05f;
 
     if (!isPressed)
     {
@@ -62,14 +62,25 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
 
         float minT = std::numeric_limits<float>::max();
         bool hit = false;
-        auto mapModel = ResourceManager::Instance().GetModel("M_MAP");
-        for (const auto &mesh : mapModel->meshes)
+        auto map = SceneManager::Instance().GetObject("O_MAP");
+        if (!map)
+        {
+            std::cerr << "[GSMapRoam::Update] No map object found." << std::endl;
+            return StateAction{StateActionType::None, ""};
+        }
+        auto mapModel = map->GetModel();
+        auto mapMatrix = map->GetWorldMatrix();
+        for (const auto &mesh : mapModel->hitboxMeshes)
         {
             for (size_t i = 0; i < mesh.indices.size(); i += 3)
             {
-                const glm::vec3 &v0 = mesh.vertices[mesh.indices[i]].Position;
-                const glm::vec3 &v1 = mesh.vertices[mesh.indices[i + 1]].Position;
-                const glm::vec3 &v2 = mesh.vertices[mesh.indices[i + 2]].Position;
+                auto transformVec3 = [&](const glm::vec3& v) {
+                    return glm::vec3(mapMatrix * glm::vec4(v, 1.0f));
+                    };
+
+                glm::vec3 v0 = transformVec3(mesh.vertices[mesh.indices[i]].Position);
+                glm::vec3 v1 = transformVec3(mesh.vertices[mesh.indices[i + 1]].Position);
+                glm::vec3 v2 = transformVec3(mesh.vertices[mesh.indices[i + 2]].Position);
 
                 float t;
                 const float EPSILON = 1e-8f;
@@ -92,7 +103,7 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
                 if (t > EPSILON && t < minT)
                 {
                     minT = t;
-                    newPos = rayOrigin + rayDir * t;
+                    newPos = rayOrigin + rayDir * t + glm::vec3(0.0f, 0.1f, 0.0f);
                     hit = true;
                 }
             }

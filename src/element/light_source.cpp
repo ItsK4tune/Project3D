@@ -35,7 +35,7 @@ void LightSource::Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionM
     if (texture)
         texture->Bind();
 
-    model->Draw();
+    model->DrawObjects();
 
     if (texture)
         texture->Unbind();

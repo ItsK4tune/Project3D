@@ -77,7 +77,7 @@ bool ResourceManager::LoadFromFile(const std::string &filePath)
 
                 std::cout << "[ResourceManager::LoadFromFile] Model[" << id << "]: " << path << std::endl;
                 auto model = std::make_shared<Model>(path);
-                if (!model || model->meshes.empty())
+                if (!model || model->renderMeshes.empty())
                 {
                     std::cerr << "[ResourceManager::LoadFromFile] Failed to load model: " << path << std::endl;
                     continue;

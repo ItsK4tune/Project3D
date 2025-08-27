@@ -25,6 +25,7 @@ public:
     std::shared_ptr<Model> GetModel() const { return model; }
     std::shared_ptr<Texture> GetTexture() const { return texture; }
     std::shared_ptr<Shader> GetShader() const { return shader; }
+    glm::mat4 GetWorldMatrix() const;
     bool IsActive() const { return isActive; }
 
     void Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
@@ -39,6 +40,4 @@ private:
     glm::vec3 scale;
 
     bool isActive = true;
-
-    glm::mat4 GetWorldMatrix() const;
 };

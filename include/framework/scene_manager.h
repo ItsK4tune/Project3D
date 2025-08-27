@@ -21,6 +21,8 @@ public:
     std::shared_ptr<Camera> GetCamera() const { return camera; }
     std::unordered_map<std::string, std::shared_ptr<Object>> GetObjects() const { return objects; }
     std::unordered_map<std::string, std::shared_ptr<HUD>> GetHUDs() const { return huds; }
+    std::shared_ptr<Object> GetObject(const std::string &name) const;
+    std::shared_ptr<HUD> GetHUD(const std::string &name) const;
     
     void DeactivateAll();
     void ActiveAll();

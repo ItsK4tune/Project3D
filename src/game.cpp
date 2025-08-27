@@ -49,12 +49,10 @@ std::unique_ptr<Game> Game::Create(int major, int minor, const std::string &titl
 void Game::SetCallback()
 {
     glfwSetFramebufferSizeCallback(m_window, [](GLFWwindow *window, int width, int height)
-    {
-        glViewport(0, 0, width, height);
-    });
+                                   { glViewport(0, 0, width, height); });
 
-    glfwSetMouseButtonCallback(m_window, [](GLFWwindow* window, int button, int action, int mods)
-    {
+    glfwSetMouseButtonCallback(m_window, [](GLFWwindow *window, int button, int action, int mods)
+                               {
         if (button == GLFW_MOUSE_BUTTON_LEFT)
         {
             double xpos, ypos;
@@ -71,11 +69,10 @@ void Game::SetCallback()
             bool isPressed = (action == GLFW_PRESS);
 
             MouseManager::Instance().OnMouseClickEvent((GLint)xpos, (GLint)ypos, isPressed);
-        }
-    });
+        } });
 
-    glfwSetCursorPosCallback(m_window, [](GLFWwindow* window, double xpos, double ypos)
-    {
+    glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double xpos, double ypos)
+                             {
         int winW, winH;
         glfwGetWindowSize(window, &winW, &winH);
         int fbW, fbH;
@@ -84,8 +81,7 @@ void Game::SetCallback()
         xpos = xpos * fbW / winW;
         ypos = ypos * fbH / winH;
 
-        MouseManager::Instance().OnMouseMoveEvent((GLint)xpos, (GLint)ypos);
-    });
+        MouseManager::Instance().OnMouseMoveEvent((GLint)xpos, (GLint)ypos); });
 
     // glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
@@ -97,20 +93,29 @@ void Game::Initialize()
 
 void Game::MainLoop()
 {
+    const float fixedDelta = 1.0f / 60.0f;
+    float accumulator = 0.0f;
     float lastTime = glfwGetTime();
-    
+
     while (!glfwWindowShouldClose(m_window))
     {
         float currentTime = glfwGetTime();
-        float deltaTime   = currentTime - lastTime;
+        float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
+        accumulator += lastTime;
 
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_CULL_FACE);
+
+        int retry = 5;
+        while (accumulator >= fixedDelta && retry-- > 0)
+        {
+            m_stateMachine->Update(fixedDelta, m_window);
+            accumulator -= fixedDelta;  
+        }
         
-        m_stateMachine->Update(deltaTime, m_window);
         m_stateMachine->Render();
 
         glfwSwapBuffers(m_window);

@@ -16,6 +16,22 @@ SceneManager::~SceneManager()
     Cleanup();
 }
 
+std::shared_ptr<Object> SceneManager::GetObject(const std::string &name) const
+{
+    auto it = objects.find(name);
+    if (it != objects.end())
+        return it->second;
+    return nullptr;
+}
+
+std::shared_ptr<HUD> SceneManager::GetHUD(const std::string &name) const
+{
+    auto it = huds.find(name);
+    if (it != huds.end())
+        return it->second;
+    return nullptr;
+}
+
 void SceneManager::LoadFromFile(const std::string &filePath)
 {
     Cleanup();
