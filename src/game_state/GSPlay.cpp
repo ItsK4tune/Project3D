@@ -5,57 +5,80 @@
 #include "resource_manager.h"
 #include "scene_manager.h"
 
-void GSplay::Init()
+void GSPlay::Init()
 {
-    std::cout << "[GSplay::Init] Initializing game play state." << std::endl;
-    ResourceManager::Instance().LoadFromFile("load/test.txt");
-    SceneManager::Instance().LoadFromFile("scene/test.txt");
+    std::cout << "[GSPlay::Init] Initializing game play state." << std::endl;
 }
 
-void GSplay::Enter()
+void GSPlay::Enter()
 {
-    std::cout << "[GSplay::Enter] Entering game play state." << std::endl;
+    std::cout << "[GSPlay::Enter] Entering game play state." << std::endl;
 }
 
-void GSplay::Exit()
+void GSPlay::Exit()
 {
-    std::cout << "[GSplay::Exit] Exiting game play state." << std::endl;
+    std::cout << "[GSPlay::Exit] Exiting game play state." << std::endl;
 }
 
-StateAction GSplay::Update(float deltaTime, GLFWwindow *window)
+// GSPlay.cpp
+StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
 {
     auto camera = SceneManager::Instance().GetCamera();
 
-    const float speed = 0.05f * deltaTime; // tốc độ di chuyển mỗi frame
+    // ====== Keyboard di chuyển ======
+    const float speed = 2.5f * deltaTime;
+    glm::vec3 pos = camera->GetPosition();
+    glm::vec3 front = glm::normalize(camera->GetTarget() - pos);
+    glm::vec3 right = glm::normalize(glm::cross(front, camera->GetUp()));
 
-    // --- Di chuyển theo XY ---
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera->Move(glm::vec3(0.0f, +speed, 0.0f)); // lên (y+)
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera->Move(glm::vec3(0.0f, -speed, 0.0f)); // xuống (y-)
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camera->Move(glm::vec3(-speed, 0.0f, 0.0f)); // trái (x-)
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camera->Move(glm::vec3(+speed, 0.0f, 0.0f)); // phải (x+)
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) pos += front * speed;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) pos -= front * speed;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) pos -= right * speed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) pos += right * speed;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) pos += camera->GetUp() * speed;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) pos -= camera->GetUp() * speed;
+
+    camera->SetPosition(pos);
+
+    // ====== Mouse xoay camera ======
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+
+    if (m_firstMouse) {
+        m_lastX = xpos;
+        m_lastY = ypos;
+        m_firstMouse = false;
     }
 
-    // --- Di chuyển theo Z ---
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        camera->Move(glm::vec3(0.0f, 0.0f, +speed)); // tiến (z+)
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
-        camera->Move(glm::vec3(0.0f, 0.0f, -speed)); // lùi (z-)
-    }
+    float xoffset = static_cast<float>(xpos - m_lastX);
+    float yoffset = static_cast<float>(m_lastY - ypos); // đảo chiều y
+    m_lastX = xpos;
+    m_lastY = ypos;
 
+    const float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    m_yaw   += xoffset;
+    m_pitch += yoffset;
+
+    if (m_pitch > 89.0f) m_pitch = 89.0f;
+    if (m_pitch < -89.0f) m_pitch = -89.0f;
+
+    glm::vec3 newFront;
+    newFront.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+    newFront.y = sin(glm::radians(m_pitch));
+    newFront.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+
+    camera->SetTarget(pos + glm::normalize(newFront));
+
+    // ====== Trả về action ======
     StateAction action;
     action.type = StateActionType::None;
     return action;
 }
 
-void GSplay::Render()
+void GSPlay::Render()
 {
     SceneManager::Instance().Draw();
 }

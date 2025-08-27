@@ -1,7 +1,8 @@
 #pragma once
 #include "state.h"
+#include <glm/glm.hpp>
 
-class GSPlay : public State
+class GSMapRoam : public State
 {
 public:
     void Init() override;
@@ -11,8 +12,6 @@ public:
     void Render() override;
 
 private:
-    bool m_firstMouse = true;
-    double m_lastX = 0.0, m_lastY = 0.0;
-    float m_yaw = -90.0f;
-    float m_pitch = 0.0f;
+    bool isPressed = false;
+    glm::vec3 newPos;
 };

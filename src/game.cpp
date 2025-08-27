@@ -4,7 +4,7 @@
 #include "scene_manager.h"
 #include "mouse_manager.h"
 #include "global.h"
-#include "game_state/GSPlay.h"
+#include "game_state/game_state.h"
 
 Game::Game(int major, int minor, const std::string &title)
     : m_window(nullptr), m_title(title), m_major(major), m_minor(minor), m_stateMachine(std::make_unique<StateMachine>())
@@ -86,11 +86,13 @@ void Game::SetCallback()
 
         MouseManager::Instance().OnMouseMoveEvent((GLint)xpos, (GLint)ypos);
     });
+
+    // glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void Game::Initialize()
 {
-    m_stateMachine->Push(std::make_unique<GSplay>());
+    m_stateMachine->Push(std::make_unique<GSMapRoam>());
 }
 
 void Game::MainLoop()
@@ -106,6 +108,7 @@ void Game::MainLoop()
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_CULL_FACE);
         
         m_stateMachine->Update(deltaTime, m_window);
         m_stateMachine->Render();

@@ -1,6 +1,8 @@
-#Model 1
+#Model 2
 ID M_TEST
 FILE "resource/model/test.fbx"
+ID M_MAP
+FILE "resource/model/map.fbx"
 #Texture 0
 #Shader 1
 ID S_NO_TEXTURE

@@ -5,7 +5,10 @@ void Model::LoadModel(const std::string &path)
 {
     Assimp::Importer importer;
     const aiScene *scene = importer.ReadFile(path,
-                                             aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
+                                             aiProcess_Triangulate |
+                                                 aiProcess_FlipUVs |
+                                                 aiProcess_CalcTangentSpace |
+                                                 aiProcess_GenNormals);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -37,31 +40,31 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene)
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
-        
+
         vertex.Position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
         vertex.Normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
 
         if (mesh->mTextureCoords[0])
-        vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+            vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
         else
-        vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+            vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
         vertex.Tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
         vertex.Bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
 
         vertices.push_back(vertex);
     }
-    
+
     for (unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];
         for (unsigned int j = 0; j < face.mNumIndices; j++)
-        indices.push_back(face.mIndices[j]);
+            indices.push_back(face.mIndices[j]);
     }
-    
+
     Mesh newMesh(vertices, indices);
     ExtractBoneWeightForVertices(newMesh, mesh, scene);
-    
+
     return newMesh;
 }
 
@@ -71,12 +74,12 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
     {
         int boneID = boneIndex;
         aiBone *bone = aimesh->mBones[boneIndex];
-        
+
         for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
         {
             unsigned int vertexId = bone->mWeights[weightIndex].mVertexId;
             float weight = bone->mWeights[weightIndex].mWeight;
-            
+
             for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
             {
                 if (mesh.vertices[vertexId].BoneIDs[i] < 0)

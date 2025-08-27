@@ -6,6 +6,8 @@
 class MouseManager
 {
 public:
+    int x, y;
+    bool isPressed = false;
     static MouseManager &Instance();
 
     void AddElement(std::shared_ptr<HUD> element);

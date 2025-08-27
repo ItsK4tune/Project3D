@@ -19,6 +19,9 @@ void MouseManager::ClearElement()
 
 void MouseManager::OnMouseClickEvent(GLint x, GLint y, bool isPressed)
 {
+    this->x = x;
+    this->y = y;
+    this->isPressed = isPressed;
     GLint flippedY = Global::ScreenHeight - y;
     for (auto it = elements.rbegin(); it != elements.rend(); ++it)
     {
@@ -31,6 +34,8 @@ void MouseManager::OnMouseClickEvent(GLint x, GLint y, bool isPressed)
 
 void MouseManager::OnMouseMoveEvent(GLint x, GLint y)
 {   
+    this->x = x;
+    this->y = y;
     GLint flippedY = Global::ScreenHeight - y;
     for (auto it = elements.rbegin(); it != elements.rend(); ++it)
     {

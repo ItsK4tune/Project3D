@@ -7,7 +7,10 @@ layout (location = 2) in vec2 aTexCoord;
 uniform mat4 view;
 uniform mat4 projection;
 
+out vec3 pos;
+
 void main()
 {
+    pos = aPos;
     gl_Position = projection * view * vec4(aPos, 1.0);
 }

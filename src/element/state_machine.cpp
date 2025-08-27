@@ -1,4 +1,5 @@
 #include "state_machine.h"
+#include "game_state/game_state.h"
 
 void StateMachine::Push(std::unique_ptr<State> state)
 {
@@ -48,10 +49,10 @@ void StateMachine::HandleAction(const StateAction &action)
     switch (action.type)
     {
     case StateActionType::Push:
-        if (action.nextState == "Pause")
+        if (action.nextState == "GSPlay")
         {
-            //Push(std::make_unique<PauseState>());
-			std::cout << "[StateMachine::HandleAction] Push PauseState not implemented yet." << std::endl;
+            Push(std::make_unique<GSPlay>());
+			// std::cout << "[StateMachine::HandleAction] Push PauseState not implemented yet." << std::endl;
         }
         break;
     case StateActionType::Pop:
