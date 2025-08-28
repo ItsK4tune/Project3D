@@ -16,7 +16,7 @@ SceneManager::~SceneManager()
     Cleanup();
 }
 
-std::shared_ptr<Object> SceneManager::GetObject(const std::string &name) const
+std::shared_ptr<Entity> SceneManager::GetObject(const std::string &name) const
 {
     auto it = objects.find(name);
     if (it != objects.end())
@@ -150,7 +150,7 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     continue;
                 }
 
-                objects[id] = std::make_shared<Object>(model, shader, texture, pos, rot, scale);
+                objects[id] = std::make_shared<Entity>(model, shader, texture, pos, rot, scale);
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " objects." << std::endl;
@@ -242,7 +242,7 @@ void SceneManager::ActiveAll()
     }
 }
 
-void SceneManager::DeactivateObject(const std::string& id)
+void SceneManager::DeactivateObject(const std::string &id)
 {
     auto it = objects.find(id);
     if (it != objects.end() && it->second)
@@ -251,7 +251,7 @@ void SceneManager::DeactivateObject(const std::string& id)
     }
 }
 
-void SceneManager::ActivateObject(const std::string& id)
+void SceneManager::ActivateObject(const std::string &id)
 {
     auto it = objects.find(id);
     if (it != objects.end() && it->second)
@@ -262,7 +262,18 @@ void SceneManager::ActivateObject(const std::string& id)
 
 void SceneManager::Update(float deltaTime)
 {
-    // Currently no dynamic updates needed
+    std::vector<std::shared_ptr<Entity>> others;
+    others.reserve(objects.size());
+    for (auto& pair : objects)
+        others.push_back(pair.second);
+
+    for (auto& pair : objects)
+    {
+        if (pair.first == "O_TEST" && pair.second)
+        {
+            pair.second->Update(deltaTime, others);
+        }
+    }
 }
 
 void SceneManager::DrawHUD()
@@ -297,7 +308,7 @@ void SceneManager::Draw()
 
     for (const auto &pair : objects)
     {
-        const auto& obj = pair.second;
+        const auto &obj = pair.second;
         if (obj)
             obj->Draw(viewMatrix, projectionMatrix);
     }

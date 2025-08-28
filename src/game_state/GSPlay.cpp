@@ -20,9 +20,24 @@ void GSPlay::Exit()
     std::cout << "[GSPlay::Exit] Exiting game play state." << std::endl;
 }
 
-// GSPlay.cpp
 StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
 {
+    if (!m_isCursorDisabled)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        m_isCursorDisabled = true;
+        m_firstMouse = true;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS && m_isCursorDisabled)
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        m_isCursorDisabled = false;
+        StateAction action;
+        action.type = StateActionType::Pop;
+        return action;
+    }
+
     auto camera = SceneManager::Instance().GetCamera();
 
     // ====== Keyboard di chuyển ======
@@ -31,12 +46,18 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
     glm::vec3 front = glm::normalize(camera->GetTarget() - pos);
     glm::vec3 right = glm::normalize(glm::cross(front, camera->GetUp()));
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) pos += front * speed;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) pos -= front * speed;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) pos -= right * speed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) pos += right * speed;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) pos += camera->GetUp() * speed;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) pos -= camera->GetUp() * speed;
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        pos += front * speed;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        pos -= front * speed;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        pos -= right * speed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        pos += right * speed;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        pos += camera->GetUp() * speed;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        pos -= camera->GetUp() * speed;
 
     camera->SetPosition(pos);
 
@@ -44,7 +65,8 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
-    if (m_firstMouse) {
+    if (m_firstMouse)
+    {
         m_lastX = xpos;
         m_lastY = ypos;
         m_firstMouse = false;
@@ -59,11 +81,13 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    m_yaw   += xoffset;
+    m_yaw += xoffset;
     m_pitch += yoffset;
 
-    if (m_pitch > 89.0f) m_pitch = 89.0f;
-    if (m_pitch < -89.0f) m_pitch = -89.0f;
+    if (m_pitch > 89.0f)
+        m_pitch = 89.0f;
+    if (m_pitch < -89.0f)
+        m_pitch = -89.0f;
 
     glm::vec3 newFront;
     newFront.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));

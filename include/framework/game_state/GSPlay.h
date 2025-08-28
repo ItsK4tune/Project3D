@@ -15,4 +15,6 @@ private:
     double m_lastX = 0.0, m_lastY = 0.0;
     float m_yaw = -90.0f;
     float m_pitch = 0.0f;
+
+    bool m_isCursorDisabled = false;
 };

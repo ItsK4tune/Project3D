@@ -74,9 +74,10 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
         {
             for (size_t i = 0; i < mesh.indices.size(); i += 3)
             {
-                auto transformVec3 = [&](const glm::vec3& v) {
+                auto transformVec3 = [&](const glm::vec3 &v)
+                {
                     return glm::vec3(mapMatrix * glm::vec4(v, 1.0f));
-                    };
+                };
 
                 glm::vec3 v0 = transformVec3(mesh.vertices[mesh.indices[i]].Position);
                 glm::vec3 v1 = transformVec3(mesh.vertices[mesh.indices[i + 1]].Position);
@@ -139,6 +140,8 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
             camera->SetTarget(camera->GetPosition() + newFront);
         }
     }
+
+    SceneManager::Instance().Update(deltaTime);
 
     StateAction action;
     action.type = StateActionType::None;

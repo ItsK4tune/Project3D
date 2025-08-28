@@ -8,16 +8,15 @@
 
 class StateMachine
 {
-    std::stack<std::unique_ptr<State>> states;
-
 public:
     void Push(std::unique_ptr<State> state);
     void Pop();
     void SwitchTo(std::unique_ptr<State> state);
 
-    void Update(float deltaTime, GLFWwindow* window = nullptr);
+    void Update(float deltaTime, GLFWwindow *window = nullptr);
     void Render();
 
-private:
-    void HandleAction(const StateAction &action);
+protected:
+    std::stack<std::unique_ptr<State>> states;
+    virtual void HandleAction(const StateAction &action) = 0;
 };

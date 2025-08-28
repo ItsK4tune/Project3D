@@ -7,7 +7,7 @@
 #include "game_state/game_state.h"
 
 Game::Game(int major, int minor, const std::string &title)
-    : m_window(nullptr), m_title(title), m_major(major), m_minor(minor), m_stateMachine(std::make_unique<StateMachine>())
+    : m_window(nullptr), m_title(title), m_major(major), m_minor(minor), m_stateMachine(std::make_unique<GameStateMachine>())
 {
     if (!glfwInit())
     {

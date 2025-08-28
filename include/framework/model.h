@@ -10,7 +10,7 @@
 struct BoundingSphere
 {
     glm::vec3 center;
-    float radiusSquared;;
+    float radius;
 };
 
 class Model
@@ -24,25 +24,6 @@ public:
     {
         LoadModel(path);
         CalculateBoundingSphere();
-
-        for (size_t meshIdx = 0; meshIdx < renderMeshes.size(); ++meshIdx) {
-            const auto &mesh = renderMeshes[meshIdx];
-            std::cout << "[Model] Render mesh " << meshIdx << " has " << mesh.vertices.size() << " vertices and " << mesh.indices.size() / 3 << " triangles." << std::endl;
-            for (size_t v = 0; v < mesh.vertices.size(); ++v) {
-            const auto &vert = mesh.vertices[v];
-            std::cout << "  Vertex " << v << ": Position(" 
-                  << vert.Position.x << ", " << vert.Position.y << ", " << vert.Position.z << ")" << std::endl;
-            }
-        }
-        for (size_t meshIdx = 0; meshIdx < hitboxMeshes.size(); ++meshIdx) {
-            const auto &mesh = hitboxMeshes[meshIdx];
-            std::cout << "[Model] Hitbox mesh " << meshIdx << " has " << mesh.vertices.size() << " vertices and " << mesh.indices.size() / 3 << " triangles." << std::endl;
-            for (size_t v = 0; v < mesh.vertices.size(); ++v) {
-            const auto &vert = mesh.vertices[v];
-            std::cout << "  Vertex " << v << ": Position(" 
-                  << vert.Position.x << ", " << vert.Position.y << ", " << vert.Position.z << ")" << std::endl;
-            }
-        }
     }
 
     void DrawObjects();

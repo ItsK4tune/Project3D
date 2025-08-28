@@ -1,7 +1,5 @@
-#define GLM_ENABLE_EXPERIMENTAL
 #include "model.h"
 #include <iostream>
-#include <glm/gtx/norm.hpp>
 
 void Model::LoadModel(const std::string &path)
 {
@@ -140,16 +138,15 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
 
 void Model::CalculateBoundingSphere()
 {
-    if (renderMeshes.empty())
+    if (hitboxMeshes.empty())
     {
         boundingSphere.center = glm::vec3(0.0f);
-        boundingSphere.radiusSquared = 0.0f;
+        boundingSphere.radius = 0.0f;
         return;
     }
 
-    // Gom tất cả các đỉnh từ meshes
     std::vector<glm::vec3> points;
-    for (const auto &mesh : renderMeshes)
+    for (const auto &mesh : hitboxMeshes)
     {
         for (const auto &vertex : mesh.vertices)
             points.push_back(vertex.Position);
@@ -158,58 +155,51 @@ void Model::CalculateBoundingSphere()
     if (points.empty())
     {
         boundingSphere.center = glm::vec3(0.0f);
-        boundingSphere.radiusSquared = 0.0f;
+        boundingSphere.radius = 0.0f;
         return;
     }
 
-    // Step 1: chọn p bất kỳ
     glm::vec3 p = points[0];
 
-    // Step 2: tìm q xa nhất từ p
     glm::vec3 q = p;
-    float maxDist2 = 0.0f;
+    float maxDist = 0.0f;
     for (const auto &pt : points)
     {
-        float dist2 = glm::length2(pt - p);
-        if (dist2 > maxDist2)
+        float dist = glm::length(pt - p);
+        if (dist > maxDist)
         {
-            maxDist2 = dist2;
+            maxDist = dist;
             q = pt;
         }
     }
 
-    // Step 3: tìm r xa nhất từ q
     glm::vec3 r = q;
-    maxDist2 = 0.0f;
+    maxDist = 0.0f;
     for (const auto &pt : points)
     {
-        float dist2 = glm::length2(pt - q);
-        if (dist2 > maxDist2)
+        float dist = glm::length(pt - q);
+        if (dist > maxDist)
         {
-            maxDist2 = dist2;
+            maxDist = dist;
             r = pt;
         }
     }
 
-    // Step 4: khởi tạo sphere
     glm::vec3 center = (q + r) * 0.5f;
-    float radius2 = glm::length2(r - center); // bán kính bình phương
+    float radius = glm::length(r - center);
 
-    // Step 5: mở rộng sphere nếu cần
     for (const auto &pt : points)
     {
-        float dist2 = glm::length2(pt - center); // khoảng cách bình phương
-        if (dist2 > radius2)
+        float dist = glm::length(pt - center);
+        if (dist > radius)
         {
-            float dist = sqrt(dist2);     // khoảng cách thật
-            float radius = sqrt(radius2); // bán kính thật
             float newRadius = (radius + dist) * 0.5f;
             float k = (newRadius - radius) / dist;
             center += (pt - center) * k;
-            radius2 = newRadius * newRadius; // cập nhật bán kính bình phương
+            radius = newRadius;
         }
     }
 
     boundingSphere.center = center;
-    boundingSphere.radiusSquared = radius2;
+    boundingSphere.radius = radius;
 }
