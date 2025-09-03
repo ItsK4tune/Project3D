@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "physic_object.h"
+#include "map.h"
 
 SceneManager &SceneManager::Instance()
 {
@@ -92,6 +94,71 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                 continue;
         }
 
+        if (line.rfind("#Map", 0) == 0)
+        {
+            int count = 0;
+            std::istringstream iss(line);
+            std::string token;
+            iss >> token >> count;
+
+            for (int i = 0; i < count; i++)
+            {
+                std::string id, modelID, textureID, shaderID;
+                glm::vec3 pos(0.0f), rot(0.0f), scale(1.0f);
+
+                std::getline(file, line);
+                id = line.substr(3);
+                std::getline(file, line);
+                modelID = line.substr(6);
+                std::getline(file, line);
+                textureID = line.substr(8);
+                std::getline(file, line);
+                shaderID = line.substr(7);
+                std::getline(file, line);
+                {
+                    std::istringstream iss(line.substr(3));
+                    iss >> pos.x >> pos.y >> pos.z;
+                }
+                std::getline(file, line);
+                {
+                    std::istringstream iss(line.substr(4));
+                    iss >> rot.x >> rot.y >> rot.z;
+                }
+                std::getline(file, line);
+                {
+                    std::istringstream iss(line.substr(6));
+                    iss >> scale.x >> scale.y >> scale.z;
+                }
+
+                auto model = ResourceManager::Instance().GetModel(modelID);
+                std::shared_ptr<Texture> texture = nullptr;
+                if (textureID != "-1")
+                    texture = ResourceManager::Instance().GetTexture(textureID);
+                auto shader = ResourceManager::Instance().GetShader(shaderID);
+
+                if (!model)
+                {
+                    std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing model: " << modelID << std::endl;
+                    continue;
+                }
+                if (!shader)
+                {
+                    std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing shader: " << shaderID << std::endl;
+                    continue;
+                }
+                if (!texture && textureID != "-1")
+                {
+                    std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing texture: " << textureID << std::endl;
+                    continue;
+                }
+
+                objects[id] = std::make_shared<Map>(model, shader, texture, pos, rot, scale);
+            }
+
+            std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " map." << std::endl;
+            continue;
+        }
+
         if (line.rfind("#Object", 0) == 0)
         {
             int count = 0;
@@ -150,7 +217,7 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     continue;
                 }
 
-                objects[id] = std::make_shared<Entity>(model, shader, texture, pos, rot, scale);
+                objects[id] = std::make_shared<PhysicObject>(model, shader, texture, pos, rot, scale);
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " objects." << std::endl;
@@ -269,7 +336,7 @@ void SceneManager::Update(float deltaTime)
 
     for (auto& pair : objects)
     {
-        if (pair.first == "O_TEST" && pair.second)
+        if (pair.second)
         {
             pair.second->Update(deltaTime, others);
         }

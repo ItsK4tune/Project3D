@@ -29,19 +29,23 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
         m_firstMouse = true;
     }
 
+    auto camera = SceneManager::Instance().GetCamera();
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS && m_isCursorDisabled)
     {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         m_isCursorDisabled = false;
-        StateAction action;
+
+        camera->SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
+        camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
+
+        StateAction action; 
         action.type = StateActionType::Pop;
         return action;
     }
 
-    auto camera = SceneManager::Instance().GetCamera();
-
     // ====== Keyboard di chuyển ======
-    const float speed = 2.5f * deltaTime;
+    const float speed = 0.25f * deltaTime;
     glm::vec3 pos = camera->GetPosition();
     glm::vec3 front = glm::normalize(camera->GetTarget() - pos);
     glm::vec3 right = glm::normalize(glm::cross(front, camera->GetUp()));

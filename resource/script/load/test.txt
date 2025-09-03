@@ -1,8 +1,10 @@
-#Model 2
+#Model 3
 ID M_TEST
-FILE "resource/model/test.fbx"
+FILE "resource/model/test.glb"
 ID M_MAP
-FILE "resource/model/map.fbx"
+FILE "resource/model/map.glb"
+ID M_CAR
+FILE "resource/model/car.fbx"
 #Texture 0
 #Shader 1
 ID S_NO_TEXTURE

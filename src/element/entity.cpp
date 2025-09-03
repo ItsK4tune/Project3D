@@ -12,66 +12,62 @@ Entity::Entity(std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_
 {
 }
 
-void Entity::Update(float deltaTime, const std::vector<std::shared_ptr<Entity>> &others)
-{
-    velocity += accel * deltaTime;
+// bool Entity::BroadPhaseCheck(const Entity &other) const
+// {
+//     auto transformVec3 = [&](const glm::vec3 &v, const glm::mat4 &m)
+//     {
+//         return glm::vec3(m * glm::vec4(v, 1.0f));
+//     };
 
-    if (glm::length(velocity) > maxSpeed)
-    {
-        velocity = glm::normalize(velocity) * maxSpeed;
-    }
-
-    if (glm::length(velocity) > 0.0f)
-    {
-        glm::vec3 frictionForce = -glm::normalize(velocity) * friction * deltaTime;
-        if (glm::length(frictionForce) > glm::length(velocity))
-        {
-            velocity = glm::vec3(0.0f);
-        }
-        else
-        {
-            velocity += frictionForce;
-        }
-    }
-
-    glm::vec3 newPos = GetPosition() + velocity * deltaTime;
-
-    bool collided = false;
-    for (const auto &other : others)
-    {
-        if (other.get() == this)
-            continue;
-        glm::vec3 oldPos = GetPosition();
-        SetPosition(newPos);
-        if (NarrowPhaseCheck(*other))
-        {
-            collided = true;
-            SetPosition(oldPos);
-            velocity = glm::vec3(0.0f);
-            break;
-        }
-        SetPosition(oldPos);
-    }
-    if (!collided)
-    {
-        SetPosition(newPos);
-    }
-
-    accel = glm::vec3(0.0f, -1.0f, 0.0f);
-}
+//     glm::vec3 centerA = transformVec3(GetModel()->boundingSphere.center, GetWorldMatrix());
+//     glm::vec3 centerB = transformVec3(other.GetModel()->boundingSphere.center, other.GetWorldMatrix());
+//     float dist = glm::length(centerA - centerB);
+//     return dist <= (GetModel()->boundingSphere.radius + other.GetModel()->boundingSphere.radius);
+// }
 
 bool Entity::BroadPhaseCheck(const Entity &other) const
 {
-    auto transformVec3 = [&](const glm::vec3 &v, const glm::mat4 &m)
+    auto transformVec3 = [](const glm::vec3 &v, const glm::mat4 &m)
     {
         return glm::vec3(m * glm::vec4(v, 1.0f));
     };
 
-    glm::vec3 centerA = transformVec3(GetModel()->boundingSphere.center, GetWorldMatrix());
-    glm::vec3 centerB = transformVec3(other.GetModel()->boundingSphere.center, other.GetWorldMatrix());
-    float dist = glm::length(centerA - centerB);
-    return dist <= (GetModel()->boundingSphere.radius + other.GetModel()->boundingSphere.radius);
+    auto computeAABB = [&](const AABB &bb, const glm::mat4 &world)
+    {
+        // 8 corner points of the bounding box
+        glm::vec3 corners[8] = {
+            {bb.min.x, bb.min.y, bb.min.z},
+            {bb.max.x, bb.min.y, bb.min.z},
+            {bb.min.x, bb.max.y, bb.min.z},
+            {bb.max.x, bb.max.y, bb.min.z},
+            {bb.min.x, bb.min.y, bb.max.z},
+            {bb.max.x, bb.min.y, bb.max.z},
+            {bb.min.x, bb.max.y, bb.max.z},
+            {bb.max.x, bb.max.y, bb.max.z}
+        };
+
+        glm::vec3 minPt( std::numeric_limits<float>::max());
+        glm::vec3 maxPt(-std::numeric_limits<float>::max());
+
+        for (int i = 0; i < 8; i++)
+        {
+            glm::vec3 t = transformVec3(corners[i], world);
+            minPt = glm::min(minPt, t);
+            maxPt = glm::max(maxPt, t);
+        }
+
+        return std::make_pair(minPt, maxPt);
+    };
+
+    auto [minA, maxA] = computeAABB(GetModel()->boundingBox, GetWorldMatrix());
+    auto [minB, maxB] = computeAABB(other.GetModel()->boundingBox, other.GetWorldMatrix());
+
+    // AABB overlap test
+    return (minA.x <= maxB.x && maxA.x >= minB.x) &&
+           (minA.y <= maxB.y && maxA.y >= minB.y) &&
+           (minA.z <= maxB.z && maxA.z >= minB.z);
 }
+
 
 bool Entity::NarrowPhaseCheck(const Entity &other) const
 {
@@ -80,6 +76,7 @@ bool Entity::NarrowPhaseCheck(const Entity &other) const
     {
         return false;
     }
+
 
     auto transformVec3 = [&](const glm::vec3 &v, const glm::mat4 &m)
     {

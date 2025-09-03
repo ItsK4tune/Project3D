@@ -7,10 +7,10 @@
 #include <iostream>
 #include "mesh.h"
 
-struct BoundingSphere
+struct AABB
 {
-    glm::vec3 center;
-    float radius;
+    glm::vec3 min;
+    glm::vec3 max;
 };
 
 class Model
@@ -18,12 +18,12 @@ class Model
 public:
     std::vector<Mesh> renderMeshes;
     std::vector<Mesh> hitboxMeshes;
-    BoundingSphere boundingSphere;
+    AABB boundingBox;
 
     Model(const std::string &path)
     {
         LoadModel(path);
-        CalculateBoundingSphere();
+        CalculateBoundingBox();
     }
 
     void DrawObjects();
@@ -31,9 +31,9 @@ public:
 
 private:
     void LoadModel(const std::string &path);
-    void ProcessNode(aiNode *node, const aiScene *scene);
-    Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox);
+    void ProcessNode(aiNode *node, const aiScene *scene, const glm::mat4 &parentTransform = glm::mat4(1.0f));
+    Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const glm::mat4 &nodeTransform = glm::mat4(1.0f));
 
     void ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiScene *scene);
-    void CalculateBoundingSphere();
+    void CalculateBoundingBox();
 };

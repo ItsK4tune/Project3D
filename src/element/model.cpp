@@ -1,63 +1,91 @@
 #include "model.h"
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
 
 void Model::LoadModel(const std::string &path)
 {
     Assimp::Importer importer;
+
+    // tắt unit scaling: không dùng aiProcess_GlobalScale
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false); 
+    importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_ALL_GEOMETRY_LAYERS, 1);
+    importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_ALL_MATERIALS, 1);
+    importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_MATERIALS, 1);
+    importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_CAMERAS, 0);
+    importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_LIGHTS, 0);
+
     const aiScene *scene = importer.ReadFile(path,
                                              aiProcess_Triangulate |
-                                                 aiProcess_FlipUVs |
-                                                 aiProcess_CalcTangentSpace |
-                                                 aiProcess_GenNormals);
-
+                                             aiProcess_FlipUVs |
+                                             aiProcess_CalcTangentSpace |
+                                             aiProcess_GenNormals);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
-        std::cerr << "[Model::loadModel] ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+        std::cerr << "[Model::loadModel] ERROR::ASSIMP::"
+                  << importer.GetErrorString() << std::endl;
         return;
     }
 
     ProcessNode(scene->mRootNode, scene);
 }
 
-void Model::ProcessNode(aiNode *node, const aiScene *scene)
+static glm::mat4 aiMat4ToGlm(const aiMatrix4x4 &m)
+{
+    return glm::mat4(
+        m.a1, m.b1, m.c1, m.d1,
+        m.a2, m.b2, m.c2, m.d2,
+        m.a3, m.b3, m.c3, m.d3,
+        m.a4, m.b4, m.c4, m.d4
+    );
+}
+
+void Model::ProcessNode(aiNode *node, const aiScene *scene, const glm::mat4 &parentTransform)
 {
     std::string nodeName(node->mName.C_Str());
     bool isHitboxCollection = (nodeName.find("Hitbox") != std::string::npos);
+    aiMatrix4x4 aiMat = node->mTransformation;
+    
+    glm::mat4 glmTransform = parentTransform * aiMat4ToGlm(aiMat);
 
     for (unsigned int i = 0; i < node->mNumMeshes; i++)
     {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
 
         if (isHitboxCollection)
-            hitboxMeshes.push_back(ProcessMesh(mesh, scene, true));
+            hitboxMeshes.push_back(ProcessMesh(mesh, scene, true, glmTransform));
         else
-            renderMeshes.push_back(ProcessMesh(mesh, scene, false));
+            renderMeshes.push_back(ProcessMesh(mesh, scene, false, glmTransform));
     }
 
-    // recursive
     for (unsigned int i = 0; i < node->mNumChildren; i++)
     {
-        ProcessNode(node->mChildren[i], scene);
+        ProcessNode(node->mChildren[i], scene, glmTransform);
     }
 }
 
-Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox)
+Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const glm::mat4 &nodeTransform)
 {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(nodeTransform)));
+
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
-        vertex.Position = glm::vec3(mesh->mVertices[i].x,
-                                    mesh->mVertices[i].y,
-                                    mesh->mVertices[i].z);
 
-        if (!isHitbox) // hitbox không cần normal/uv
+        glm::vec4 pos = nodeTransform * glm::vec4(mesh->mVertices[i].x,
+                                                  mesh->mVertices[i].y,
+                                                  mesh->mVertices[i].z,
+                                                  1.0f);
+        vertex.Position = glm::vec3(pos);
+
+        if (!isHitbox)
         {
-            vertex.Normal = glm::vec3(mesh->mNormals[i].x,
-                                      mesh->mNormals[i].y,
-                                      mesh->mNormals[i].z);
+            glm::vec3 normal(mesh->mNormals[i].x,
+                             mesh->mNormals[i].y,
+                             mesh->mNormals[i].z);
+            vertex.Normal = glm::normalize(normalMatrix * normal);
 
             if (mesh->mTextureCoords[0])
                 vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x,
@@ -65,12 +93,15 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox)
             else
                 vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
-            vertex.Tangent = glm::vec3(mesh->mTangents[i].x,
-                                       mesh->mTangents[i].y,
-                                       mesh->mTangents[i].z);
-            vertex.Bitangent = glm::vec3(mesh->mBitangents[i].x,
-                                         mesh->mBitangents[i].y,
-                                         mesh->mBitangents[i].z);
+            glm::vec3 tangent(mesh->mTangents[i].x,
+                              mesh->mTangents[i].y,
+                              mesh->mTangents[i].z);
+            glm::vec3 bitangent(mesh->mBitangents[i].x,
+                                mesh->mBitangents[i].y,
+                                mesh->mBitangents[i].z);
+
+            vertex.Tangent = glm::normalize(normalMatrix * tangent);
+            vertex.Bitangent = glm::normalize(normalMatrix * bitangent);
         }
         else
         {
@@ -91,7 +122,7 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox)
     }
 
     Mesh newMesh(vertices, indices);
-    if (!isHitbox) // hitbox thường không cần xương
+    if (!isHitbox)
         ExtractBoneWeightForVertices(newMesh, mesh, scene);
 
     return newMesh;
@@ -105,10 +136,10 @@ void Model::DrawObjects()
 
 void Model::DrawHitboxes()
 {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // vẽ wireframe
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     for (auto &mesh : hitboxMeshes)
         mesh.Draw();
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // reset lại
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiScene *scene)
@@ -136,70 +167,42 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
     }
 }
 
-void Model::CalculateBoundingSphere()
+void Model::CalculateBoundingBox()
 {
     if (hitboxMeshes.empty())
     {
-        boundingSphere.center = glm::vec3(0.0f);
-        boundingSphere.radius = 0.0f;
+        boundingBox.min = glm::vec3(0.0f);
+        boundingBox.max = glm::vec3(0.0f);
         return;
     }
 
-    std::vector<glm::vec3> points;
+    glm::vec3 minPoint(FLT_MAX);
+    glm::vec3 maxPoint(-FLT_MAX);
+
     for (const auto &mesh : hitboxMeshes)
     {
         for (const auto &vertex : mesh.vertices)
-            points.push_back(vertex.Position);
-    }
-
-    if (points.empty())
-    {
-        boundingSphere.center = glm::vec3(0.0f);
-        boundingSphere.radius = 0.0f;
-        return;
-    }
-
-    glm::vec3 p = points[0];
-
-    glm::vec3 q = p;
-    float maxDist = 0.0f;
-    for (const auto &pt : points)
-    {
-        float dist = glm::length(pt - p);
-        if (dist > maxDist)
         {
-            maxDist = dist;
-            q = pt;
+            minPoint.x = std::min(minPoint.x, vertex.Position.x);
+            minPoint.y = std::min(minPoint.y, vertex.Position.y);
+            minPoint.z = std::min(minPoint.z, vertex.Position.z);
+
+            maxPoint.x = std::max(maxPoint.x, vertex.Position.x);
+            maxPoint.y = std::max(maxPoint.y, vertex.Position.y);
+            maxPoint.z = std::max(maxPoint.z, vertex.Position.z);
         }
     }
 
-    glm::vec3 r = q;
-    maxDist = 0.0f;
-    for (const auto &pt : points)
+    boundingBox.min = minPoint;
+    boundingBox.max = maxPoint;
+
+    const float epsilon = 1e-5f;
+    for (int i = 0; i < 3; i++)
     {
-        float dist = glm::length(pt - q);
-        if (dist > maxDist)
+        if (boundingBox.min[i] == boundingBox.max[i])
         {
-            maxDist = dist;
-            r = pt;
+            boundingBox.min[i] -= epsilon;
+            boundingBox.max[i] += epsilon;
         }
     }
-
-    glm::vec3 center = (q + r) * 0.5f;
-    float radius = glm::length(r - center);
-
-    for (const auto &pt : points)
-    {
-        float dist = glm::length(pt - center);
-        if (dist > radius)
-        {
-            float newRadius = (radius + dist) * 0.5f;
-            float k = (newRadius - radius) / dist;
-            center += (pt - center) * k;
-            radius = newRadius;
-        }
-    }
-
-    boundingSphere.center = center;
-    boundingSphere.radius = radius;
 }

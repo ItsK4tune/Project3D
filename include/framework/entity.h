@@ -17,7 +17,7 @@ public:
     void SetMaxSpeed(float ms) { maxSpeed = ms; }
     void SetFriction(float f) { friction = f; }
 
-    void Update(float deltaTime, const std::vector<std::shared_ptr<Entity>>& others);
+    virtual void Update(float deltaTime, const std::vector<std::shared_ptr<Entity>>& others) = 0;
 
     bool BroadPhaseCheck(const Entity &other) const;
     bool NarrowPhaseCheck(const Entity &other) const;
