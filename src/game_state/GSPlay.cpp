@@ -100,6 +100,8 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
 
     camera->SetTarget(pos + glm::normalize(newFront));
 
+    SceneManager::Instance().Update(deltaTime);
+
     // ====== Trả về action ======
     StateAction action;
     action.type = StateActionType::None;

@@ -20,7 +20,7 @@ public:
     virtual void Update(float deltaTime, const std::vector<std::shared_ptr<Entity>>& others) = 0;
 
     bool BroadPhaseCheck(const Entity &other) const;
-    bool NarrowPhaseCheck(const Entity &other) const;
+    bool NarrowPhaseCheck(const Entity &other, float deltaTime);
 
 private:
     glm::vec3 previousPosition;
@@ -29,7 +29,4 @@ private:
     glm::vec3 velocity;
     float maxSpeed;
     float friction;
-
-    bool TriangleIntersect(const glm::vec3 &A0, const glm::vec3 &A1, const glm::vec3 &A2,
-                           const glm::vec3 &B0, const glm::vec3 &B1, const glm::vec3 &B2) const;
 };

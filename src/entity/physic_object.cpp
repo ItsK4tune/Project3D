@@ -10,46 +10,38 @@ void PhysicObject::Update(float deltaTime, const std::vector<std::shared_ptr<Ent
 {
     SetVelocity(GetVelocity() + GetAccel() * deltaTime);
 
-    if (glm::length(GetVelocity()) > GetMaxSpeed())
-    {
-        SetVelocity(glm::normalize(GetVelocity()) * GetMaxSpeed());
-    }
+    // std::cout << "Velocity: (" << GetVelocity().x << ", " << GetVelocity().y << ", " << GetVelocity().z << ")\n";
 
+    // clamp speed
+    float speed = glm::length(GetVelocity());
+    if (speed > GetMaxSpeed() && speed > 0.0f)
+        SetVelocity(glm::normalize(GetVelocity()) * GetMaxSpeed());
+
+    // friction (simple)
     if (glm::length(GetVelocity()) > 0.0f)
     {
         glm::vec3 frictionForce = -glm::normalize(GetVelocity()) * GetFriction() * deltaTime;
         if (glm::length(frictionForce) > glm::length(GetVelocity()))
-        {
             SetVelocity(glm::vec3(0.0f));
-        }
         else
-        {
             SetVelocity(GetVelocity() + frictionForce);
-        }
     }
 
-    glm::vec3 newPos = GetPosition() + GetVelocity() * deltaTime;
-
-    bool collided = false;
+    // build list of nearby entities using broadphase
     for (const auto &other : others)
     {
+        if (!other)
+            continue;
         if (other.get() == this)
             continue;
-        glm::vec3 oldPos = GetPosition();
-        SetPosition(newPos);
-        if (NarrowPhaseCheck(*other))
+        if (!BroadPhaseCheck(*other))
         {
-            collided = true;
-            SetPosition(oldPos);
-            SetVelocity(glm::vec3(0.0f));
-            break;
+            SetPosition(GetPosition() + GetVelocity() * deltaTime);
+            continue;
         }
-        SetPosition(oldPos);
-    }
-    if (!collided)
-    {
-        SetPosition(newPos);
+        
+        NarrowPhaseCheck(*other, deltaTime);
     }
 
-    SetAccel(glm::vec3(0.0f, -1.0f, 0.0f));
+    SetAccel(glm::vec3(0.0f, -0.098f, 0.0f));
 }

@@ -6,7 +6,6 @@ void Model::LoadModel(const std::string &path)
 {
     Assimp::Importer importer;
 
-    // tắt unit scaling: không dùng aiProcess_GlobalScale
     importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false); 
     importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_ALL_GEOMETRY_LAYERS, 1);
     importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_ALL_MATERIALS, 1);
@@ -196,7 +195,7 @@ void Model::CalculateBoundingBox()
     boundingBox.min = minPoint;
     boundingBox.max = maxPoint;
 
-    const float epsilon = 1e-5f;
+    const float epsilon = 0.001f;
     for (int i = 0; i < 3; i++)
     {
         if (boundingBox.min[i] == boundingBox.max[i])

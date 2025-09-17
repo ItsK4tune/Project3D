@@ -24,6 +24,14 @@ public:
     {
         LoadModel(path);
         CalculateBoundingBox();
+
+        for (const auto &mesh : hitboxMeshes)
+        {
+            for (const auto &vertex : mesh.vertices)
+            {
+                std::cout << "Hitbox Vertex: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")\n";
+            }
+        }
     }
 
     void DrawObjects();
