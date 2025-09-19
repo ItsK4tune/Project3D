@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "resource_manager.h"
 #include "scene_manager.h"
+#include "physic_manager.h"
 
 void GSPlay::Init()
 {
@@ -100,6 +101,7 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
 
     camera->SetTarget(pos + glm::normalize(newFront));
 
+    PhysicManager::Instance().Update(deltaTime);
     SceneManager::Instance().Update(deltaTime);
 
     // ====== Trả về action ======

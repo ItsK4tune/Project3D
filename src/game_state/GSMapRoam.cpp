@@ -5,6 +5,7 @@
 #include "resource_manager.h"
 #include "scene_manager.h"
 #include "mouse_manager.h"
+#include "physic_manager.h"
 #include "global.h"
 
 void GSMapRoam::Init()
@@ -29,10 +30,10 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
     auto camera = SceneManager::Instance().GetCamera();
     auto &mouse = MouseManager::Instance();
 
-    const float speed = 0.25f * deltaTime;
+    const float speed = 25.0f * deltaTime;
     const float edgeThreshold = 50.0f;
-    const float moveLerpSpeed = 0.1f * deltaTime;
-    const float rotateLerpSpeed = 0.1f * deltaTime;
+    const float moveLerpSpeed = 1.0f * deltaTime;
+    const float rotateLerpSpeed = 1.0f * deltaTime;
     const float stopThreshold = 0.05f;
 
     if (!isPressed)
@@ -141,6 +142,7 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
         }
     }
 
+    PhysicManager::Instance().Update(deltaTime);
     SceneManager::Instance().Update(deltaTime);
 
     StateAction action;

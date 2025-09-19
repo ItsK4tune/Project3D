@@ -1,0 +1,31 @@
+#pragma once
+#include <memory>
+#include "PxPhysicsAPI.h"
+
+using namespace physx;
+
+class PhysicManager
+{
+public:
+    static PhysicManager& Instance();
+
+    PhysicManager(const PhysicManager&) = delete;
+    PhysicManager& operator=(const PhysicManager&) = delete;
+
+    bool Init();
+    void Update(float deltaTime);
+
+    PxPhysics* GetPhysics();
+    PxScene*   GetScene();
+
+private:
+    PhysicManager();
+    ~PhysicManager();
+
+    PxDefaultAllocator      gAllocator;
+    PxDefaultErrorCallback  gErrorCallback;
+    PxFoundation*           gFoundation;
+    PxPhysics*              gPhysics;
+    PxDefaultCpuDispatcher* gDispatcher;
+    PxScene*                gScene;
+};

@@ -1,5 +1,5 @@
 #pragma once
-#include <unordered_map>
+#include <vector>
 #include <memory>
 #include <string>
 #include "model.h"
@@ -26,7 +26,7 @@ private:
     ResourceManager() = default;
     ~ResourceManager();
 
-    std::unordered_map<std::string, std::shared_ptr<Model>> modelMap;
-    std::unordered_map<std::string, std::shared_ptr<Texture>> textureMap;
-    std::unordered_map<std::string, std::shared_ptr<Shader>> shaderMap;
+    std::vector<std::shared_ptr<Model>> models;
+    std::vector<std::shared_ptr<Texture>> textures;
+    std::vector<std::shared_ptr<Shader>> shaders;
 };

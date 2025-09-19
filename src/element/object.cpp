@@ -2,13 +2,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
-Object::Object(std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t)
-    : model(m), shader(s), texture(t), position(0.0f), rotation(0.0f), scale(1.0f)
+Object::Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t)
+    : id(i), model(m), shader(s), texture(t), position(0.0f), rotation(0.0f), scale(1.0f)
 {
 }
 
-Object::Object(std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
-    : model(m), shader(s), texture(t), position(pos), rotation(rot), scale(scl)
+Object::Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
+    : id(i), model(m), shader(s), texture(t), position(pos), rotation(rot), scale(scl)
 {
 }    
 

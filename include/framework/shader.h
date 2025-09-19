@@ -9,8 +9,11 @@ class Shader
 public:
     unsigned int ID;
 
-    Shader(const std::string& vertexPath, const std::string& fragmentPath);
+    Shader(const std::string &i, const std::string& vertexPath, const std::string& fragmentPath);
     ~Shader();
+
+    void SetID(const std::string &id) { this->id = id; }
+    std::string GetID() const { return id; }
 
     void Use() const;
 
@@ -23,6 +26,8 @@ public:
     void SetArray(const std::string& name, const std::vector<T>& values) const;
 
 private:
+    std::string id;
+
     std::string LoadShaderSource(const std::string& path);
     unsigned int CompileShader(unsigned int type, const std::string& source);
 };

@@ -4,8 +4,6 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "physic_object.h"
-#include "map.h"
 
 SceneManager &SceneManager::Instance()
 {
@@ -20,17 +18,21 @@ SceneManager::~SceneManager()
 
 std::shared_ptr<Entity> SceneManager::GetObject(const std::string &name) const
 {
-    auto it = objects.find(name);
-    if (it != objects.end())
-        return it->second;
+    for (const auto &obj : objects)
+    {
+        if (obj && obj->GetID() == name)
+            return obj;
+    }
     return nullptr;
 }
 
 std::shared_ptr<HUD> SceneManager::GetHUD(const std::string &name) const
 {
-    auto it = huds.find(name);
-    if (it != huds.end())
-        return it->second;
+    for (const auto &hud : huds)
+    {
+        if (hud && hud->GetID() == name)
+            return hud;
+    }
     return nullptr;
 }
 
@@ -152,7 +154,9 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     continue;
                 }
 
-                objects[id] = std::make_shared<Map>(model, shader, texture, pos, rot, scale);
+                auto entity = std::make_shared<Entity>(id, model, shader, texture, pos, rot, scale);
+                objects.push_back(entity);
+                entity->AttachRigidStatic();
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " map." << std::endl;
@@ -217,7 +221,9 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     continue;
                 }
 
-                objects[id] = std::make_shared<PhysicObject>(model, shader, texture, pos, rot, scale);
+                auto entity = std::make_shared<Entity>(id, model, shader, texture, pos, rot, scale);
+                objects.push_back(entity);
+                entity->AttachRigidDynamic(1.0f);
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " objects." << std::endl;
@@ -266,7 +272,8 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     texture = ResourceManager::Instance().GetTexture(textureID);
                 auto shader = ResourceManager::Instance().GetShader(shaderID);
 
-                huds[id] = std::make_shared<HUD>(model, shader, texture, pos, rot, scale);
+                auto hud = std::make_shared<HUD>(id, model, shader, texture, pos, rot, scale);
+                huds.push_back(hud);
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " HUDs." << std::endl;
@@ -286,60 +293,42 @@ void SceneManager::LoadFromFile(const std::string &filePath)
 
 void SceneManager::Cleanup()
 {
-    objects.clear();
-    huds.clear();
+    objects.empty();
+    huds.empty();
     camera.reset();
 }
 
 void SceneManager::DeactivateAll()
 {
-    for (auto &pair : objects)
+    for (auto &obj : objects)
     {
-        if (pair.second)
-            pair.second->SetActive(false);
+        obj->SetActive(false);
     }
 }
 
 void SceneManager::ActiveAll()
 {
-    for (auto &pair : objects)
+    for (auto &obj : objects)
     {
-        if (pair.second)
-            pair.second->SetActive(true);
+        obj->SetActive(true);
     }
 }
 
 void SceneManager::DeactivateObject(const std::string &id)
 {
-    auto it = objects.find(id);
-    if (it != objects.end() && it->second)
-    {
-        it->second->SetActive(false);
-    }
+    GetObject(id)->SetActive(false);
 }
 
 void SceneManager::ActivateObject(const std::string &id)
 {
-    auto it = objects.find(id);
-    if (it != objects.end() && it->second)
-    {
-        it->second->SetActive(true);
-    }
+    GetObject(id)->SetActive(true);
 }
 
 void SceneManager::Update(float deltaTime)
 {
-    std::vector<std::shared_ptr<Entity>> others;
-    others.reserve(objects.size());
-    for (auto& pair : objects)
-        others.push_back(pair.second);
-
-    for (auto& pair : objects)
+    for (auto &obj : objects)
     {
-        if (pair.second)
-        {
-            pair.second->Update(deltaTime, others);
-        }
+        obj->Update(deltaTime);
     }
 }
 
@@ -354,11 +343,9 @@ void SceneManager::DrawHUD()
     glm::mat4 viewMatrix = glm::mat4(1.0f);
     glm::mat4 orthosMatrix = camera->GetOrthosMatrix();
 
-    for (const auto &pair : huds)
+    for (const auto &hud : huds)
     {
-        const auto &hud = pair.second;
-        if (hud)
-            hud->Draw(viewMatrix, orthosMatrix);
+        hud->Draw(viewMatrix, orthosMatrix);
     }
 }
 
@@ -373,10 +360,8 @@ void SceneManager::Draw()
     glm::mat4 viewMatrix = camera->GetViewMatrix();
     glm::mat4 projectionMatrix = camera->GetPerspectiveMatrix();
 
-    for (const auto &pair : objects)
+    for (const auto &obj : objects)
     {
-        const auto &obj = pair.second;
-        if (obj)
-            obj->Draw(viewMatrix, projectionMatrix);
+        obj->Draw(viewMatrix, projectionMatrix);
     }
 }

@@ -3,6 +3,7 @@
 #include "resource_manager.h"
 #include "scene_manager.h"
 #include "mouse_manager.h"
+#include "physic_manager.h"
 #include "global.h"
 #include "game_state/game_state.h"
 
@@ -88,6 +89,7 @@ void Game::SetCallback()
 
 void Game::Initialize()
 {
+    PhysicManager::Instance().Init();
     m_stateMachine->Push(std::make_unique<GSMapRoam>());
 }
 
@@ -99,11 +101,11 @@ void Game::MainLoop()
 
     while (!glfwWindowShouldClose(m_window))
     {
-        // std::cout << "FPS: " << 1.0f / (glfwGetTime() - lastTime) << "\n";
+        std::cout << "FPS: " << 1.0f / (glfwGetTime() - lastTime) << "\n";
         float currentTime = glfwGetTime();
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;
-        accumulator += lastTime;
+        accumulator += deltaTime;
 
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glEnable(GL_DEPTH_TEST);

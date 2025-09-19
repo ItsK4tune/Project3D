@@ -3,11 +3,12 @@
 #include "stb/stb_image.h"
 #include <iostream>
 
-Texture::Texture(const std::string& path, bool flipVertically)
+Texture::Texture(const std::string &i, const std::string &path, bool flipVertically)
+    : m_id(i)
 {
     stbi_set_flip_vertically_on_load(flipVertically);
 
-    unsigned char* data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
+    unsigned char *data = stbi_load(path.c_str(), &m_width, &m_height, &m_channels, 0);
     if (!data)
     {
         std::cerr << "[Texture] Failed to load texture: " << path << std::endl;
@@ -16,9 +17,12 @@ Texture::Texture(const std::string& path, bool flipVertically)
     }
 
     GLenum format = GL_RGB;
-    if (m_channels == 1) format = GL_RED;
-    else if (m_channels == 3) format = GL_RGB;
-    else if (m_channels == 4) format = GL_RGBA;
+    if (m_channels == 1)
+        format = GL_RED;
+    else if (m_channels == 3)
+        format = GL_RGB;
+    else if (m_channels == 4)
+        format = GL_RGBA;
 
     glGenTextures(1, &ID);
     glBindTexture(GL_TEXTURE_2D, ID);

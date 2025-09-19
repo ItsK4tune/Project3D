@@ -2,11 +2,26 @@
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 
+Model::Model(const std::string &i, const std::string &path)
+    : id(i)
+{
+    LoadModel(path);
+    CalculateBoundingBox();
+
+    for (const auto &mesh : hitboxMeshes)
+    {
+        for (const auto &vertex : mesh.vertices)
+        {
+            std::cout << "Hitbox Vertex: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")\n";
+        }
+    }
+}
+
 void Model::LoadModel(const std::string &path)
 {
     Assimp::Importer importer;
 
-    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false); 
+    importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
     importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_ALL_GEOMETRY_LAYERS, 1);
     importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_ALL_MATERIALS, 1);
     importer.SetPropertyInteger(AI_CONFIG_IMPORT_FBX_READ_MATERIALS, 1);
@@ -15,9 +30,9 @@ void Model::LoadModel(const std::string &path)
 
     const aiScene *scene = importer.ReadFile(path,
                                              aiProcess_Triangulate |
-                                             aiProcess_FlipUVs |
-                                             aiProcess_CalcTangentSpace |
-                                             aiProcess_GenNormals);
+                                                 aiProcess_FlipUVs |
+                                                 aiProcess_CalcTangentSpace |
+                                                 aiProcess_GenNormals);
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
         std::cerr << "[Model::loadModel] ERROR::ASSIMP::"
@@ -34,8 +49,7 @@ static glm::mat4 aiMat4ToGlm(const aiMatrix4x4 &m)
         m.a1, m.b1, m.c1, m.d1,
         m.a2, m.b2, m.c2, m.d2,
         m.a3, m.b3, m.c3, m.d3,
-        m.a4, m.b4, m.c4, m.d4
-    );
+        m.a4, m.b4, m.c4, m.d4);
 }
 
 void Model::ProcessNode(aiNode *node, const aiScene *scene, const glm::mat4 &parentTransform)
@@ -43,7 +57,7 @@ void Model::ProcessNode(aiNode *node, const aiScene *scene, const glm::mat4 &par
     std::string nodeName(node->mName.C_Str());
     bool isHitboxCollection = (nodeName.find("Hitbox") != std::string::npos);
     aiMatrix4x4 aiMat = node->mTransformation;
-    
+
     glm::mat4 glmTransform = parentTransform * aiMat4ToGlm(aiMat);
 
     for (unsigned int i = 0; i < node->mNumMeshes; i++)

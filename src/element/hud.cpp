@@ -1,8 +1,8 @@
 #include "hud.h"
 #include "scene_manager.h"
 
-HUD::HUD(std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
-    : Object(m, s, t, pos, rot, scl), isHolding(false), clickFunc(nullptr), hoverFunc(nullptr) {}
+HUD::HUD(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
+    : Object(i, m, s, t, pos, rot, scl), isHolding(false), clickFunc(nullptr), hoverFunc(nullptr) {}
 
 void HUD::SetOnClick(void (*function)())
 {

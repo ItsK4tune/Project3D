@@ -16,27 +16,39 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::Cleanup()
 {
-    modelMap.clear();
-    textureMap.clear();
-    shaderMap.clear();
+    models.clear();
+    textures.clear();
+    shaders.clear();
 }
 
 std::shared_ptr<Model> ResourceManager::GetModel(const std::string &id) const
 {
-    auto it = modelMap.find(id);
-    return (it != modelMap.end()) ? it->second : nullptr;
+    for (const auto &model : models)
+    {
+        if (model && model->GetID() == id)
+            return model;
+    }
+    return nullptr;
 }
 
 std::shared_ptr<Texture> ResourceManager::GetTexture(const std::string &id) const
 {
-    auto it = textureMap.find(id);
-    return (it != textureMap.end()) ? it->second : nullptr;
+    for (const auto &texture : textures)
+    {
+        if (texture && texture->GetID() == id)
+            return texture;
+    }
+    return nullptr;
 }
 
 std::shared_ptr<Shader> ResourceManager::GetShader(const std::string &id) const
 {
-    auto it = shaderMap.find(id);
-    return (it != shaderMap.end()) ? it->second : nullptr;
+    for (const auto &shader : shaders)
+    {
+        if (shader && shader->GetID() == id)
+            return shader;
+    }
+    return nullptr;
 }
 
 bool ResourceManager::LoadFromFile(const std::string &filePath)
@@ -76,17 +88,17 @@ bool ResourceManager::LoadFromFile(const std::string &filePath)
                 path = line.substr(start + 1, end - start - 1);
 
                 std::cout << "[ResourceManager::LoadFromFile] Model[" << id << "]: " << path << std::endl;
-                auto model = std::make_shared<Model>(path);
+                auto model = std::make_shared<Model>(id, path);
                 if (!model || model->renderMeshes.empty())
                 {
                     std::cerr << "[ResourceManager::LoadFromFile] Failed to load model: " << path << std::endl;
                     continue;
                 }
                 else
-                    modelMap[id] = model;
+                    models.push_back(model);
             }
 
-            std::cout << "[ResourceManager::LoadFromFile] Loaded " << modelMap.size() << " models." << std::endl;
+            std::cout << "[ResourceManager::LoadFromFile] Loaded " << models.size() << " models." << std::endl;
         }
 
         else if (line.rfind("#Texture", 0) == 0)
@@ -107,17 +119,17 @@ bool ResourceManager::LoadFromFile(const std::string &filePath)
                 path = line.substr(start + 1, end - start - 1);
 
                 std::cout << "[ResourceManager::LoadFromFile] Texture[" << id << "]: " << path << std::endl;
-                auto texture = std::make_shared<Texture>(path);
+                auto texture = std::make_shared<Texture>(id, path);
                 if (!texture || texture->ID == 0)
                 {
                     std::cerr << "[ResourceManager::LoadFromFile] Failed to load model: " << path << std::endl;
                     continue;
                 }
                 else
-                    textureMap[id] = texture;
+                    textures.push_back(texture);
             }
 
-            std::cout << "[ResourceManager::LoadFromFile] Loaded " << textureMap.size() << " textures." << std::endl;
+            std::cout << "[ResourceManager::LoadFromFile] Loaded " << textures.size() << " textures." << std::endl;
         }
 
         else if (line.rfind("#Shader", 0) == 0)
@@ -151,17 +163,17 @@ bool ResourceManager::LoadFromFile(const std::string &filePath)
                 }
 
                 std::cout << "[ResourceManager::LoadFromFile] Shader[" << id << "]: VS=" << vsPath << " FS=" << fsPath << std::endl;
-                auto shader = std::make_shared<Shader>(vsPath, fsPath);
+                auto shader = std::make_shared<Shader>(id, vsPath, fsPath);
                 if (!shader || shader->ID == 0)
                 {
                     std::cerr << "[ResourceManager::LoadFromFile] Failed to load shader: " << id << std::endl;
                     continue;
                 }
                 else
-                    shaderMap[id] = shader;
+                    shaders.push_back(shader);
             }
 
-            std::cout << "[ResourceManager::LoadFromFile] Loaded " << shaderMap.size() << " shaders." << std::endl;
+            std::cout << "[ResourceManager::LoadFromFile] Loaded " << shaders.size() << " shaders." << std::endl;
         }
     }
 

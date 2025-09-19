@@ -8,9 +8,10 @@
 class Object
 {
 public:
-    Object(std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t);
-    Object(std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl);
+    Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t);
+    Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl);
 
+    void SetID(const std::string &id) { this->id = id; }
     void SetPosition(const glm::vec3 &pos) { position = pos; }
     void SetRotation(const glm::vec3 &rot) { rotation = rot; }
     void SetScale(const glm::vec3 &scl) { scale = scl; }
@@ -19,6 +20,7 @@ public:
     void SetShader(std::shared_ptr<Shader> s) { shader = s; }
     void SetActive(bool active) { isActive = active; }
 
+    std::string GetID() const { return id; }
     glm::vec3 GetPosition() const { return position; }
     glm::vec3 GetRotation() const { return rotation; }
     glm::vec3 GetScale() const { return scale; }
@@ -31,6 +33,7 @@ public:
     void Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
 
 private:
+    std::string id;
     std::shared_ptr<Model> model;
     std::shared_ptr<Texture> texture;
     std::shared_ptr<Shader> shader;
