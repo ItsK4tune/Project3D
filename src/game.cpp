@@ -101,7 +101,7 @@ void Game::MainLoop()
 
     while (!glfwWindowShouldClose(m_window))
     {
-        std::cout << "FPS: " << 1.0f / (glfwGetTime() - lastTime) << "\n";
+        // std::cout << "FPS: " << 1.0f / (glfwGetTime() - lastTime) << "\n";
         float currentTime = glfwGetTime();
         float deltaTime = currentTime - lastTime;
         lastTime = currentTime;

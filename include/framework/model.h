@@ -18,7 +18,7 @@ class Model
 public:
     std::vector<Mesh> renderMeshes;
     std::vector<Mesh> hitboxMeshes;
-    AABB boundingBox;
+    std::vector<AABB> boundingBoxs;
 
     Model(const std::string &i, const std::string &path);
 

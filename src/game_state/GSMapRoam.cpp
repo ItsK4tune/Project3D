@@ -63,7 +63,7 @@ StateAction GSMapRoam::Update(float deltaTime, GLFWwindow *window)
 
         float minT = std::numeric_limits<float>::max();
         bool hit = false;
-        auto map = SceneManager::Instance().GetObject("O_MAP");
+        auto map = SceneManager::Instance().GetEntity("O_MAP");
         if (!map)
         {
             std::cerr << "[GSMapRoam::Update] No map object found." << std::endl;

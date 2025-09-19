@@ -180,42 +180,52 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
     }
 }
 
-void Model::CalculateBoundingBox()
-{
-    if (hitboxMeshes.empty())
-    {
-        boundingBox.min = glm::vec3(0.0f);
-        boundingBox.max = glm::vec3(0.0f);
-        return;
-    }
-
-    glm::vec3 minPoint(FLT_MAX);
-    glm::vec3 maxPoint(-FLT_MAX);
-
-    for (const auto &mesh : hitboxMeshes)
-    {
-        for (const auto &vertex : mesh.vertices)
+void Model::CalculateBoundingBox() 
+{ 
+    if (hitboxMeshes.empty()) 
+    { 
+        AABB boundingBox;
+        boundingBox.min = glm::vec3(0.0f); 
+        boundingBox.max = glm::vec3(0.0f); 
+        boundingBoxs.push_back(boundingBox); 
+        return; 
+    } 
+ 
+    for (const auto &mesh : hitboxMeshes) 
+    { 
+        if (mesh.vertices.empty()) 
         {
-            minPoint.x = std::min(minPoint.x, vertex.Position.x);
-            minPoint.y = std::min(minPoint.y, vertex.Position.y);
-            minPoint.z = std::min(minPoint.z, vertex.Position.z);
-
-            maxPoint.x = std::max(maxPoint.x, vertex.Position.x);
-            maxPoint.y = std::max(maxPoint.y, vertex.Position.y);
-            maxPoint.z = std::max(maxPoint.z, vertex.Position.z);
+            AABB boundingBox;
+            boundingBox.min = glm::vec3(0.0f);
+            boundingBox.max = glm::vec3(0.0f);
+            boundingBoxs.push_back(boundingBox);
+            continue;
         }
-    }
 
-    boundingBox.min = minPoint;
-    boundingBox.max = maxPoint;
-
-    const float epsilon = 0.001f;
-    for (int i = 0; i < 3; i++)
-    {
-        if (boundingBox.min[i] == boundingBox.max[i])
-        {
-            boundingBox.min[i] -= epsilon;
-            boundingBox.max[i] += epsilon;
-        }
-    }
+        glm::vec3 minPoint = mesh.vertices[0].Position;
+        glm::vec3 maxPoint = mesh.vertices[0].Position;
+ 
+        for (const auto &vertex : mesh.vertices) 
+        { 
+            minPoint = glm::min(minPoint, vertex.Position);
+            maxPoint = glm::max(maxPoint, vertex.Position);
+        } 
+ 
+        AABB boundingBox;
+        boundingBox.min = minPoint; 
+        boundingBox.max = maxPoint; 
+ 
+        const float epsilon = 0.001f; 
+        for (int i = 0; i < 3; i++) 
+        { 
+            if (std::abs(boundingBox.max[i] - boundingBox.min[i]) < epsilon) 
+            { 
+                float center = (boundingBox.min[i] + boundingBox.max[i]) * 0.5f;
+                boundingBox.min[i] = center - epsilon * 0.5f; 
+                boundingBox.max[i] = center + epsilon * 0.5f; 
+            } 
+        } 
+ 
+        boundingBoxs.push_back(boundingBox); 
+    } 
 }

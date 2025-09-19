@@ -9,12 +9,22 @@ public:
            const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl);
     virtual ~Entity();
 
+    void SetStatic() { isStatic = true; }
+
     void AttachRigidDynamic(float density = 1.0f);
     void AttachRigidStatic();
+    void DetachRigid();
     void SyncFromPhysX();
+
+    void LockRotation(bool lockX, bool lockY, bool lockZ);
+    void LockTranslation(bool lockX, bool lockY, bool lockZ);
+
+    std::vector<glm::bvec3> GetLockedRotation() const;
+    std::vector<glm::bvec3> GetLockedTranslation() const;
 
     virtual void Update(float deltaTime);
 
 protected:
-    PxRigidActor *actor;
+    bool isStatic = false;
+    std::vector<PxRigidActor *> actors;
 };

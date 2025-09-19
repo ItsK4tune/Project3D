@@ -16,12 +16,12 @@ SceneManager::~SceneManager()
     Cleanup();
 }
 
-std::shared_ptr<Entity> SceneManager::GetObject(const std::string &name) const
+std::shared_ptr<Entity> SceneManager::GetEntity(const std::string &name) const
 {
-    for (const auto &obj : objects)
+    for (const auto &e : entities)
     {
-        if (obj && obj->GetID() == name)
-            return obj;
+        if (e && e->GetID() == name)
+            return e;
     }
     return nullptr;
 }
@@ -155,15 +155,16 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                 }
 
                 auto entity = std::make_shared<Entity>(id, model, shader, texture, pos, rot, scale);
-                objects.push_back(entity);
+                entities.push_back(entity);
                 entity->AttachRigidStatic();
+                entity->SetStatic();
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " map." << std::endl;
             continue;
         }
 
-        if (line.rfind("#Object", 0) == 0)
+        if (line.rfind("#Entity", 0) == 0)
         {
             int count = 0;
             std::istringstream iss(line);
@@ -222,8 +223,9 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                 }
 
                 auto entity = std::make_shared<Entity>(id, model, shader, texture, pos, rot, scale);
-                objects.push_back(entity);
+                entities.push_back(entity);
                 entity->AttachRigidDynamic(1.0f);
+                // entity->LockRotation(true, false, true);
             }
 
             std::cout << "[SceneManager::LoadFromFile] Loaded " << count << " objects." << std::endl;
@@ -293,42 +295,42 @@ void SceneManager::LoadFromFile(const std::string &filePath)
 
 void SceneManager::Cleanup()
 {
-    objects.empty();
+    entities.empty();
     huds.empty();
     camera.reset();
 }
 
 void SceneManager::DeactivateAll()
 {
-    for (auto &obj : objects)
+    for (auto &e : entities)
     {
-        obj->SetActive(false);
+        e->SetActive(false);
     }
 }
 
 void SceneManager::ActiveAll()
 {
-    for (auto &obj : objects)
+    for (auto &e : entities)
     {
-        obj->SetActive(true);
+        e->SetActive(true);
     }
 }
 
-void SceneManager::DeactivateObject(const std::string &id)
+void SceneManager::DeactivateEntity(const std::string &id)
 {
-    GetObject(id)->SetActive(false);
+    GetEntity(id)->SetActive(false);
 }
 
-void SceneManager::ActivateObject(const std::string &id)
+void SceneManager::ActivateEntity(const std::string &id)
 {
-    GetObject(id)->SetActive(true);
+    GetEntity(id)->SetActive(true);
 }
 
 void SceneManager::Update(float deltaTime)
 {
-    for (auto &obj : objects)
+    for (auto &e : entities)
     {
-        obj->Update(deltaTime);
+        e->Update(deltaTime);
     }
 }
 
@@ -360,8 +362,8 @@ void SceneManager::Draw()
     glm::mat4 viewMatrix = camera->GetViewMatrix();
     glm::mat4 projectionMatrix = camera->GetPerspectiveMatrix();
 
-    for (const auto &obj : objects)
+    for (const auto &e : entities)
     {
-        obj->Draw(viewMatrix, projectionMatrix);
+        e->Draw(viewMatrix, projectionMatrix);
     }
 }

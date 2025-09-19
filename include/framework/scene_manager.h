@@ -18,15 +18,15 @@ public:
     void Cleanup();
     
     std::shared_ptr<Camera> GetCamera() const { return camera; }
-    std::vector<std::shared_ptr<Entity>> GetObjects() const { return objects; }
+    std::vector<std::shared_ptr<Entity>> GetEntities() const { return entities; }
     std::vector<std::shared_ptr<HUD>> GetHUDs() const { return huds; }
-    std::shared_ptr<Entity> GetObject(const std::string &name) const;
+    std::shared_ptr<Entity> GetEntity (const std::string &name) const;
     std::shared_ptr<HUD> GetHUD(const std::string &name) const;
     
     void DeactivateAll();
     void ActiveAll();
-    void DeactivateObject(const std::string& id);
-    void ActivateObject(const std::string& id);
+    void DeactivateEntity(const std::string& id);
+    void ActivateEntity(const std::string& id);
 
     void Update(float deltaTime);
     void Draw();
@@ -35,7 +35,7 @@ public:
 private:
     std::shared_ptr<Camera> camera;
 
-    std::vector<std::shared_ptr<Entity>> objects;
+    std::vector<std::shared_ptr<Entity>> entities;
     std::vector<std::shared_ptr<HUD>> huds; 
 
     SceneManager() = default;

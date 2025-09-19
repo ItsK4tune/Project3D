@@ -18,6 +18,9 @@ public:
     PxPhysics* GetPhysics();
     PxScene*   GetScene();
 
+    void RemoveActor(PxActor* actor);
+    void RemoveAllActors();
+
 private:
     PhysicManager();
     ~PhysicManager();

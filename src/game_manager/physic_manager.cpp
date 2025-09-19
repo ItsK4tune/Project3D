@@ -1,8 +1,10 @@
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <algorithm>
 #include "physic_manager.h"
 
-PhysicManager& PhysicManager::Instance()
+PhysicManager &PhysicManager::Instance()
 {
     static PhysicManager instance;
     return instance;
@@ -18,22 +20,27 @@ PhysicManager::PhysicManager()
 
 PhysicManager::~PhysicManager()
 {
-    if (gScene)      gScene->release();
-    if (gDispatcher) gDispatcher->release();
-    if (gPhysics)    gPhysics->release();
-    if (gFoundation) gFoundation->release();
+    if (gScene)
+        gScene->release();
+    if (gDispatcher)
+        gDispatcher->release();
+    if (gPhysics)
+        gPhysics->release();
+    if (gFoundation)
+        gFoundation->release();
 }
 
 bool PhysicManager::Init()
 {
     gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
-    if (!gFoundation) return false;
+    if (!gFoundation)
+        return false;
 
     gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale());
-    if (!gPhysics) return false;
+    if (!gPhysics)
+        return false;
 
-    gDispatcher = PxDefaultCpuDispatcherCreate(2);
-    // gDispatcher = PxDefaultCpuDispatcherCreate(std::max(1u, std::thread::hardware_concurrency() - 1));
+    gDispatcher = PxDefaultCpuDispatcherCreate(std::max(1u, std::thread::hardware_concurrency() - 1));
 
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
     sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
@@ -53,14 +60,47 @@ void PhysicManager::Update(float deltaTime)
     }
 }
 
-PxPhysics* PhysicManager::GetPhysics()
+PxPhysics *PhysicManager::GetPhysics()
 {
-    if (!gPhysics) std::cerr << "[PhysicManager] GetPhysics() -> nullptr\n";
+    if (!gPhysics)
+        std::cerr << "[PhysicManager] GetPhysics() -> nullptr\n";
     return gPhysics;
 }
 
-PxScene* PhysicManager::GetScene()
+PxScene *PhysicManager::GetScene()
 {
-    if (!gScene) std::cerr << "[PhysicManager] GetScene() -> nullptr\n";
+    if (!gScene)
+        std::cerr << "[PhysicManager] GetScene() -> nullptr\n";
     return gScene;
+}
+
+void PhysicManager::RemoveActor(PxActor *actor)
+{
+    if (!gScene || !actor)
+        return;
+
+    gScene->removeActor(*actor);
+    actor->release();
+    std::cout << "[PhysX] Removed actor\n";
+}
+
+void PhysicManager::RemoveAllActors()
+{
+    if (!gScene)
+        return;
+
+    PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC);
+    if (nbActors == 0)
+        return;
+
+    std::vector<PxActor *> actors(nbActors);
+    gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC | PxActorTypeFlag::eRIGID_STATIC, actors.data(), nbActors);
+
+    for (PxActor *actor : actors)
+    {
+        gScene->removeActor(*actor);
+        actor->release();
+    }
+
+    std::cout << "[PhysX] Removed " << nbActors << " actors\n";
 }
