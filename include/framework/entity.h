@@ -1,6 +1,7 @@
 #pragma once
 #include "object.h"
 #include "physic_manager.h"
+#include "state_machine.h"
 
 class Entity : public Object
 {
@@ -27,4 +28,5 @@ public:
 protected:
     bool isStatic = false;
     std::vector<PxRigidActor *> actors;
+    std::unique_ptr<StateMachine> stateMachine;
 };

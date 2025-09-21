@@ -1,0 +1,108 @@
+// #include "game_state/GSTest.h"
+// #include <iostream>
+// #include <glad/glad.h>
+// #include <GLFW/glfw3.h>
+// #include "resource_manager.h"
+// #include "scene_manager.h"
+// #include "physic_manager.h"
+
+// void GSTest::Init()
+// {
+//     std::cout << "[GSTest::Init] Initializing game play state." << std::endl;
+//     ResourceManager::Instance().LoadFromFile("load/test.txt");
+//     SceneManager::Instance().LoadFromFile("scene/test.txt");
+// }
+
+// void GSTest::Enter()
+// {
+//     std::cout << "[GSTest::Enter] Entering game play state." << std::endl;
+// }
+
+// void GSTest::Exit()
+// {
+//     std::cout << "[GSTest::Exit] Exiting game play state." << std::endl;
+// }
+
+// StateAction GSTest::Update(float deltaTime, GLFWwindow *window)
+// {
+//     auto camera = SceneManager::Instance().GetCamera();
+
+//     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS && m_isCursorDisabled)
+//     {
+//         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+//         m_isCursorDisabled = false;
+
+//         camera->SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
+//         camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
+
+//         StateAction action;
+//         action.type = StateActionType::Pop;
+//         return action;
+//     }
+
+//     const float speed = 2.5f * deltaTime;
+//     glm::vec3 pos = camera->GetPosition();
+//     glm::vec3 front = glm::normalize(camera->GetTarget() - pos);
+//     glm::vec3 right = glm::normalize(glm::cross(front, camera->GetUp()));
+
+//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+//         pos += front * speed;
+//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+//         pos -= front * speed;
+//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+//         pos -= right * speed;
+//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+//         pos += right * speed;
+//     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+//         pos += camera->GetUp() * speed;
+//     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+//         pos -= camera->GetUp() * speed;
+
+//     camera->SetPosition(pos);
+
+//     double xpos, ypos;
+//     glfwGetCursorPos(window, &xpos, &ypos);
+
+//     if (m_firstMouse)
+//     {
+//         m_lastX = xpos;
+//         m_lastY = ypos;
+//         m_firstMouse = false;
+//     }
+
+//     float xoffset = static_cast<float>(xpos - m_lastX);
+//     float yoffset = static_cast<float>(m_lastY - ypos);
+//     m_lastX = xpos;
+//     m_lastY = ypos;
+
+//     const float sensitivity = 0.1f;
+//     xoffset *= sensitivity;
+//     yoffset *= sensitivity;
+
+//     m_yaw += xoffset;
+//     m_pitch += yoffset;
+
+//     if (m_pitch > 89.0f)
+//         m_pitch = 89.0f;
+//     if (m_pitch < -89.0f)
+//         m_pitch = -89.0f;
+
+//     glm::vec3 newFront;
+//     newFront.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+//     newFront.y = sin(glm::radians(m_pitch));
+//     newFront.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+
+//     camera->SetTarget(pos + glm::normalize(newFront));
+
+//     PhysicManager::Instance().Update(deltaTime);
+//     SceneManager::Instance().Update(deltaTime);
+
+//     StateAction action;
+//     action.type = StateActionType::None;
+//     return action;
+// }
+
+// void GSTest::Render()
+// {
+//     SceneManager::Instance().Draw();
+// }

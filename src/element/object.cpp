@@ -40,7 +40,7 @@ void Object::Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix
         shader->SetInt("texture1", 0);
     }
 
-    model->DrawObjects();
+    model->DrawHitboxes();
 
     if (texture)
         texture->Unbind();

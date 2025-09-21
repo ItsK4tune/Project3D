@@ -22,14 +22,35 @@ struct StateAction
     std::string nextState;
 };
 
-class State
-{
+class State {
 public:
     virtual ~State() = default;
     virtual void Init() = 0;
     virtual void Enter() = 0;
-    virtual StateAction Update(float deltaTime, GLFWwindow* window = nullptr) = 0;
     virtual void Render() = 0;
     virtual void Exit() = 0;
+
+    virtual StateAction UpdateGame(float deltaTime, void* context) = 0;
+
     bool isInitialized = false;
 };
+
+class GameState : public State {
+public:
+    StateAction UpdateGame(float deltaTime, void* context) override {
+        auto window = static_cast<GLFWwindow*>(context);
+        return Update(deltaTime, window);
+    }
+
+    virtual StateAction Update(float deltaTime, GLFWwindow* window) = 0;
+};
+
+// class PlayerState : public State {
+// public:
+//     StateAction UpdateGame(float deltaTime, void* context) override {
+//         auto player = static_cast<Player*>(context);
+//         return Update(deltaTime, player);
+//     }
+
+//     virtual StateAction Update(float deltaTime, Player* player) = 0;
+// };

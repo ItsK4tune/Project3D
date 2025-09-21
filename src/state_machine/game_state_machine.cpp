@@ -1,5 +1,13 @@
 #include "game_state_machine.h"
-#include "game_state/game_state.h"
+#include "game_state.h"
+
+void GameStateMachine::Render()
+{
+    if (!states.empty())
+        states.top()->Render();
+    else
+        std::cout << "[GameStateMachine::Render] No state to render." << std::endl;
+}
 
 void GameStateMachine::HandleAction(const StateAction &action)
 {
@@ -14,14 +22,14 @@ void GameStateMachine::HandleAction(const StateAction &action)
             
         } else
         {
-            std::cout << "[StateMachine::HandleAction] StateActionType::Push: Not implemented yet." << std::endl;
+            std::cout << "[GameStateMachine::HandleAction] StateActionType::Push: Not implemented yet." << std::endl;
         }
         break;
     case StateActionType::Pop:
         Pop();
         break;
     case StateActionType::Switch:
-        std::cout << "[StateMachine::HandleAction] StateActionType::Switch: Not implemented yet." << std::endl;
+        std::cout << "[GameStateMachine::HandleAction] StateActionType::Switch: Not implemented yet." << std::endl;
         break;
     case StateActionType::Quit:
         while (!states.empty())

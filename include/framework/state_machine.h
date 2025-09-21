@@ -13,8 +13,8 @@ public:
     void Pop();
     void SwitchTo(std::unique_ptr<State> state);
 
-    void Update(float deltaTime, GLFWwindow *window = nullptr);
-    void Render();
+    void Update(float deltaTime, void* context = nullptr);
+    virtual void Render() = 0;
 
 protected:
     std::stack<std::unique_ptr<State>> states;

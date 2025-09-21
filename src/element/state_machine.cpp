@@ -26,19 +26,11 @@ void StateMachine::SwitchTo(std::unique_ptr<State> state)
     Push(std::move(state));
 }
 
-void StateMachine::Update(float deltaTime, GLFWwindow* window)
+void StateMachine::Update(float deltaTime, void* context)
 {
     if (states.empty())
         return;
 
-    StateAction action = states.top()->Update(deltaTime, window);
+    StateAction action = states.top()->UpdateGame(deltaTime, context);
     HandleAction(action);
-}
-
-void StateMachine::Render()
-{
-    if (!states.empty())
-        states.top()->Render();
-    else
-        std::cout << "[StateMachine::Render] No state to render." << std::endl;
 }

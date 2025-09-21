@@ -9,6 +9,8 @@
 void GSPlay::Init()
 {
     std::cout << "[GSPlay::Init] Initializing game play state." << std::endl;
+    ResourceManager::Instance().LoadFromFile("load/test.txt");
+    SceneManager::Instance().LoadFromFile("scene/test.txt");
 }
 
 void GSPlay::Enter()
@@ -40,13 +42,12 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
         camera->SetPosition(glm::vec3(0.0f, 3.0f, 0.0f));
         camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
 
-        StateAction action; 
+        StateAction action;
         action.type = StateActionType::Pop;
         return action;
     }
 
-    // ====== Keyboard di chuyển ======
-    const float speed = 0.25f * deltaTime;
+    const float speed = 2.5f * deltaTime;
     glm::vec3 pos = camera->GetPosition();
     glm::vec3 front = glm::normalize(camera->GetTarget() - pos);
     glm::vec3 right = glm::normalize(glm::cross(front, camera->GetUp()));
@@ -66,7 +67,6 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
 
     camera->SetPosition(pos);
 
-    // ====== Mouse xoay camera ======
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
 
@@ -78,7 +78,7 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
     }
 
     float xoffset = static_cast<float>(xpos - m_lastX);
-    float yoffset = static_cast<float>(m_lastY - ypos); // đảo chiều y
+    float yoffset = static_cast<float>(m_lastY - ypos);
     m_lastX = xpos;
     m_lastY = ypos;
 
@@ -104,7 +104,6 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
     PhysicManager::Instance().Update(deltaTime);
     SceneManager::Instance().Update(deltaTime);
 
-    // ====== Trả về action ======
     StateAction action;
     action.type = StateActionType::None;
     return action;

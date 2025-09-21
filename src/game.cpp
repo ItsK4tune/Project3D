@@ -4,8 +4,9 @@
 #include "scene_manager.h"
 #include "mouse_manager.h"
 #include "physic_manager.h"
+#include "game_state_machine.h"
 #include "global.h"
-#include "game_state/game_state.h"
+#include "game_state.h"
 
 Game::Game(int major, int minor, const std::string &title)
     : m_window(nullptr), m_title(title), m_major(major), m_minor(minor), m_stateMachine(std::make_unique<GameStateMachine>())
@@ -90,7 +91,7 @@ void Game::SetCallback()
 void Game::Initialize()
 {
     PhysicManager::Instance().Init();
-    m_stateMachine->Push(std::make_unique<GSMapRoam>());
+    m_stateMachine->Push(std::make_unique<GSPlay>());
 }
 
 void Game::MainLoop()

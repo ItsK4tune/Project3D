@@ -35,6 +35,7 @@ public:
 private:
     std::shared_ptr<Camera> camera;
 
+    //std:shared_ptr<
     std::vector<std::shared_ptr<Entity>> entities;
     std::vector<std::shared_ptr<HUD>> huds; 
 

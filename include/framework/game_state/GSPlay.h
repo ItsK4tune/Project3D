@@ -1,7 +1,7 @@
 #pragma once
 #include "state.h"
 
-class GSPlay : public State
+class GSPlay : public GameState
 {
 public:
     void Init() override;

@@ -3,7 +3,7 @@
 #include <string>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "game_state_machine.h"
+#include "state_machine.h"
 
 class Game
 {
@@ -23,5 +23,5 @@ private:
     int m_major;
     int m_minor;
     std::string m_title;
-    std::unique_ptr<GameStateMachine> m_stateMachine;
+    std::unique_ptr<StateMachine> m_stateMachine;
 };

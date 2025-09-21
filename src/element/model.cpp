@@ -185,8 +185,8 @@ void Model::CalculateBoundingBox()
     if (hitboxMeshes.empty()) 
     { 
         AABB boundingBox;
-        boundingBox.min = glm::vec3(0.0f); 
-        boundingBox.max = glm::vec3(0.0f); 
+        boundingBox.min = glm::vec3(-0.001f); 
+        boundingBox.max = glm::vec3(0.001f); 
         boundingBoxs.push_back(boundingBox); 
         return; 
     } 

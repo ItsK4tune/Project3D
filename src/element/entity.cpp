@@ -32,7 +32,7 @@ static inline AABB TransformAABB(const AABB &local, const glm::mat4 &transform)
 
 Entity::Entity(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t,
                const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
-    : Object(i, m, s, t, pos, rot, scl) {}
+    : Object(i, m, s, t, pos, rot, scl), stateMachine(nullptr) {}
 
 Entity::~Entity()
 {
@@ -205,4 +205,6 @@ void Entity::Update(float deltaTime)
 {
     if (!isStatic)
         SyncFromPhysX();
+    if (stateMachine)
+        stateMachine->Update(deltaTime);
 }

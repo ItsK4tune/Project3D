@@ -11,8 +11,6 @@
 void GSMapRoam::Init()
 {
     std::cout << "[GSMapRoam::Init] Initializing game play state." << std::endl;
-    ResourceManager::Instance().LoadFromFile("load/test.txt");
-    SceneManager::Instance().LoadFromFile("scene/test.txt");
 }
 
 void GSMapRoam::Enter()

@@ -2,7 +2,7 @@
 #include "state.h"
 #include <glm/glm.hpp>
 
-class GSMapRoam : public State
+class GSMapRoam : public GameState
 {
 public:
     void Init() override;
