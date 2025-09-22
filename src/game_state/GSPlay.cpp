@@ -5,6 +5,7 @@
 #include "resource_manager.h"
 #include "scene_manager.h"
 #include "physic_manager.h"
+// #include "mouse_manager.h"
 
 void GSPlay::Init()
 {
@@ -66,40 +67,6 @@ StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)
         pos -= camera->GetUp() * speed;
 
     camera->SetPosition(pos);
-
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
-
-    if (m_firstMouse)
-    {
-        m_lastX = xpos;
-        m_lastY = ypos;
-        m_firstMouse = false;
-    }
-
-    float xoffset = static_cast<float>(xpos - m_lastX);
-    float yoffset = static_cast<float>(m_lastY - ypos);
-    m_lastX = xpos;
-    m_lastY = ypos;
-
-    const float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    m_yaw += xoffset;
-    m_pitch += yoffset;
-
-    if (m_pitch > 89.0f)
-        m_pitch = 89.0f;
-    if (m_pitch < -89.0f)
-        m_pitch = -89.0f;
-
-    glm::vec3 newFront;
-    newFront.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-    newFront.y = sin(glm::radians(m_pitch));
-    newFront.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-
-    camera->SetTarget(pos + glm::normalize(newFront));
 
     PhysicManager::Instance().Update(deltaTime);
     SceneManager::Instance().Update(deltaTime);

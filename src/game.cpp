@@ -70,7 +70,7 @@ void Game::SetCallback()
 
             bool isPressed = (action == GLFW_PRESS);
 
-            MouseManager::Instance().OnMouseClickEvent((GLint)xpos, (GLint)ypos, isPressed);
+            MouseManager::Instance().OnMouseClickEvent(xpos, ypos, isPressed);
         } });
 
     glfwSetCursorPosCallback(m_window, [](GLFWwindow *window, double xpos, double ypos)
@@ -83,7 +83,7 @@ void Game::SetCallback()
         xpos = xpos * fbW / winW;
         ypos = ypos * fbH / winH;
 
-        MouseManager::Instance().OnMouseMoveEvent((GLint)xpos, (GLint)ypos); });
+        MouseManager::Instance().OnMouseMoveEvent(xpos, ypos); });
 
     // glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }

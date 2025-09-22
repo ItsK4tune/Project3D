@@ -14,7 +14,7 @@ void HUD::SetOnHover(void (*function)())
     hoverFunc = function;
 }
 
-bool HUD::HandleTouchEvent(int x, int y, bool bIsPressed)
+bool HUD::HandleTouchEvent(double x, double y, bool bIsPressed)
 {
     bool isHandled = false;
 
@@ -49,7 +49,7 @@ bool HUD::HandleTouchEvent(int x, int y, bool bIsPressed)
     return isHandled;
 }
 
-bool HUD::HandleHoverEvent(int x, int y)
+bool HUD::HandleHoverEvent(double x, double y)
 {
     bool isHandled = false;
 

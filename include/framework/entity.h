@@ -1,7 +1,6 @@
 #pragma once
 #include "object.h"
 #include "physic_manager.h"
-#include "state_machine.h"
 
 class Entity : public Object
 {
@@ -11,6 +10,7 @@ public:
     virtual ~Entity();
 
     void SetStatic() { isStatic = true; }
+    std::vector<PxRigidActor *> GetActors() { return actors; }
 
     void AttachRigidDynamic(float density = 1.0f);
     void AttachRigidStatic();
@@ -28,5 +28,4 @@ public:
 protected:
     bool isStatic = false;
     std::vector<PxRigidActor *> actors;
-    std::unique_ptr<StateMachine> stateMachine;
 };

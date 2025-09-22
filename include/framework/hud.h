@@ -11,8 +11,8 @@ public:
 
     void SetOnClick(void (*function)());
     void SetOnHover(void (*function)());
-    bool HandleTouchEvent(int x, int y, bool bIsPressed);
-    bool HandleHoverEvent(int x, int y);
+    bool HandleTouchEvent(double x, double y, bool bIsPressed);
+    bool HandleHoverEvent(double x, double y);
     bool IsHolding();
 
 private:

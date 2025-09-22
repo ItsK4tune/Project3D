@@ -17,7 +17,7 @@ void MouseManager::ClearElement()
     elements.clear();
 }
 
-void MouseManager::OnMouseClickEvent(GLint x, GLint y, bool isPressed)
+void MouseManager::OnMouseClickEvent(double x, double y, bool isPressed)
 {
     this->x = x;
     this->y = y;
@@ -32,7 +32,7 @@ void MouseManager::OnMouseClickEvent(GLint x, GLint y, bool isPressed)
     }
 }
 
-void MouseManager::OnMouseMoveEvent(GLint x, GLint y)
+void MouseManager::OnMouseMoveEvent(double x, double y)
 {   
     this->x = x;
     this->y = y;

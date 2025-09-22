@@ -32,7 +32,7 @@ static inline AABB TransformAABB(const AABB &local, const glm::mat4 &transform)
 
 Entity::Entity(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t,
                const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
-    : Object(i, m, s, t, pos, rot, scl), stateMachine(nullptr) {}
+    : Object(i, m, s, t, pos, rot, scl) {}
 
 Entity::~Entity()
 {
@@ -55,22 +55,24 @@ void Entity::AttachRigidDynamic(float density)
 
     for (auto const &boundingBox : GetModel()->boundingBoxs)
     {
-        PxRigidActor *actor;
-        AABB bbox = TransformAABB(boundingBox, GetWorldMatrix());
-        glm::vec3 center = (bbox.min + bbox.max) * 0.5f;
-        glm::vec3 halfExtents = (bbox.max - bbox.min) * 0.5f;
+        glm::vec3 center = (boundingBox.min + boundingBox.max) * 0.5f;
+        glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
 
-        PxTransform transform(PxVec3(center.x, center.y, center.z));
-        actor = physics->createRigidDynamic(transform);
+        PxTransform transform(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
+
+        PxRigidDynamic *actor = physics->createRigidDynamic(transform);
 
         PxShape *shape = physics->createShape(
             PxBoxGeometry(halfExtents.x, halfExtents.y, halfExtents.z),
             *physics->createMaterial(0.0f, 0.0f, 0.6f));
+
+        PxTransform localPose(PxVec3(center.x, center.y, center.z));
+        shape->setLocalPose(localPose);
+
         actor->attachShape(*shape);
         shape->release();
 
-        PxRigidBodyExt::updateMassAndInertia(*static_cast<PxRigidDynamic *>(actor), density);
-
+        PxRigidBodyExt::updateMassAndInertia(*actor, density);
         PhysicManager::Instance().GetScene()->addActor(*actor);
         actors.push_back(actor);
     }
@@ -84,19 +86,20 @@ void Entity::AttachRigidStatic()
 
     for (auto const &boundingBox : GetModel()->boundingBoxs)
     {
-        PxRigidActor *actor;
-        if (GetID() == "O_MAP")
-            std::cout << "AABB min(" << boundingBox.min.x << ", " << boundingBox.min.y << ", " << boundingBox.min.z << ") max (" << boundingBox.max.x << ", " << boundingBox.max.y << ", " << boundingBox.max.z << ")\n";
-        AABB bbox = TransformAABB(boundingBox, GetWorldMatrix());
-        glm::vec3 center = (bbox.min + bbox.max) * 0.5f;
-        glm::vec3 halfExtents = (bbox.max - bbox.min) * 0.5f;
+        glm::vec3 center = (boundingBox.min + boundingBox.max) * 0.5f;
+        glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
 
-        PxTransform transform(PxVec3(center.x, center.y, center.z));
-        actor = physics->createRigidStatic(transform);
+        PxTransform transform(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
+
+        PxRigidActor *actor = physics->createRigidStatic(transform);
 
         PxShape *shape = physics->createShape(
             PxBoxGeometry(halfExtents.x, halfExtents.y, halfExtents.z),
             *physics->createMaterial(0.0f, 0.0f, 0.6f));
+        
+        PxTransform localPose(PxVec3(center.x, center.y, center.z));
+        shape->setLocalPose(localPose);
+        
         actor->attachShape(*shape);
         shape->release();
 
@@ -205,6 +208,4 @@ void Entity::Update(float deltaTime)
 {
     if (!isStatic)
         SyncFromPhysX();
-    if (stateMachine)
-        stateMachine->Update(deltaTime);
 }
