@@ -1,11 +1,9 @@
 #include "player_state/PSIdle.h"
-
 #include <iostream>
-#include "global.h"
-// #include <glad/glad.h>
-// #include <GLFW/glfw3.h>
-// #include "scene_manager.h"
-// #include "physic_manager.h"
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include "mouse_manager.h"
+#include "input_manager.h"
 
 void PSIdle::Init()
 {
@@ -41,19 +39,42 @@ StateAction PSIdle::Update(float deltaTime, Player *player)
     static float yaw = -90.0f;
     static float pitch = 0.0f;
 
-    yaw   += static_cast<float>(dx);
+    yaw += static_cast<float>(dx);
     pitch += static_cast<float>(dy);
 
-    if (pitch > 89.0f)  pitch = 89.0f;
-    if (pitch < -89.0f) pitch = -89.0f;
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
 
     glm::vec3 front;
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     front.y = sin(glm::radians(pitch));
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front   = glm::normalize(front);
+    front = glm::normalize(front);
 
-    camera->SetTarget(camera->GetPosition() + front);
+    glm::vec3 pos = camera->GetPosition();
+    glm::vec3 right = glm::normalize(glm::cross(front, camera->GetUp()));
+
+    float speed = 5.0f * deltaTime;
+
+    auto &input = InputManager::Instance();
+    if (input.IsKeyHeld(GLFW_KEY_W))
+        pos += front * speed;
+    if (input.IsKeyHeld(GLFW_KEY_S))
+        pos -= front * speed;
+    if (input.IsKeyHeld(GLFW_KEY_A))
+        pos -= right * speed;
+    if (input.IsKeyHeld(GLFW_KEY_D))
+        pos += right * speed;
+    if (input.IsKeyHeld(GLFW_KEY_SPACE))
+        pos += camera->GetUp() * speed;
+    if (input.IsKeyHeld(GLFW_KEY_LEFT_CONTROL))
+        pos -= camera->GetUp() * speed;
+
+    // cập nhật camera
+    camera->SetPosition(pos);
+    camera->SetTarget(pos + front);
 
     StateAction action;
     return action;
