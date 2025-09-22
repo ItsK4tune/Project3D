@@ -7,7 +7,7 @@ InputManager& InputManager::Instance() {
 }
 
 void InputManager::AddKeyToTrack(int key) {
-    trackedKeys[key] = KeyState::Released; // mặc định Released
+    trackedKeys[key] = KeyState::Released;
 }
 
 void InputManager::RemoveKeyToTrack(int key) {
@@ -19,7 +19,6 @@ void InputManager::RemoveAllKeys() {
 }
 
 void InputManager::Update(GLFWwindow* window) {
-    std::cout << "Updating\n";
     for (auto& [key, state] : trackedKeys) {
         int glfwState = glfwGetKey(window, key);
 
@@ -37,7 +36,9 @@ void InputManager::Update(GLFWwindow* window) {
 
 bool InputManager::IsKeyPressed(int key) const {
     auto it = trackedKeys.find(key);
-    return (it != trackedKeys.end() && it->second == KeyState::Pressed);
+    if (it == trackedKeys.end()) return false;
+
+    return (it->second == KeyState::Pressed || it->second == KeyState::Held);
 }
 
 bool InputManager::IsKeyHeld(int key) const {
