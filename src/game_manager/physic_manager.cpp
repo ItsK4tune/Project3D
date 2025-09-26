@@ -47,6 +47,8 @@ bool PhysicManager::Init()
     sceneDesc.cpuDispatcher = gDispatcher;
     sceneDesc.filterShader = PxDefaultSimulationFilterShader;
 
+    sceneDesc.simulationEventCallback = this;
+
     gScene = gPhysics->createScene(sceneDesc);
     return (gScene != nullptr);
 }
@@ -103,4 +105,23 @@ void PhysicManager::RemoveAllActors()
     }
 
     std::cout << "[PhysX] Removed " << nbActors << " actors\n";
+}
+
+void PhysicManager::onTrigger(PxTriggerPair *pairs, PxU32 count)
+{
+    for (PxU32 i = 0; i < count; i++)
+    {
+        const PxTriggerPair &p = pairs[i];
+
+        if (p.status & PxPairFlag::eNOTIFY_TOUCH_FOUND)
+        {
+            std::cout << "[PhysX] Trigger ENTER: "
+                      << p.triggerActor << " với " << p.otherActor << "\n";
+        }
+        if (p.status & PxPairFlag::eNOTIFY_TOUCH_LOST)
+        {
+            std::cout << "[PhysX] Trigger EXIT: "
+                      << p.triggerActor << " với " << p.otherActor << "\n";
+        }
+    }
 }

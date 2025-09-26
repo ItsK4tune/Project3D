@@ -1,6 +1,7 @@
 #include "object.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include "input_manager.h"
 
 Object::Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t)
     : id(i), model(m), shader(s), texture(t), position(0.0f), rotation(0.0f), scale(1.0f)
@@ -40,7 +41,11 @@ void Object::Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix
         shader->SetInt("texture1", 0);
     }
 
-    model->DrawHitboxes();
+    auto &input = InputManager::Instance();
+    if (input.IsKeyHeld(GLFW_KEY_F1))
+        model->DrawHitboxes();
+    else
+        model->DrawObjects();
 
     if (texture)
         texture->Unbind();

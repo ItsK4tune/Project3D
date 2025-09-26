@@ -22,11 +22,18 @@ void GSPlay::Enter()
     input.AddKeyToTrack(GLFW_KEY_A);
     input.AddKeyToTrack(GLFW_KEY_S);
     input.AddKeyToTrack(GLFW_KEY_D);
+    input.AddKeyToTrack(GLFW_KEY_F1);
 }
 
 void GSPlay::Exit()
 {
     std::cout << "[GSPlay::Exit] Exiting game play state." << std::endl;
+    auto &input = InputManager::Instance();
+    input.RemoveKeyToTrack(GLFW_KEY_W);
+    input.RemoveKeyToTrack(GLFW_KEY_A);
+    input.RemoveKeyToTrack(GLFW_KEY_S);
+    input.RemoveKeyToTrack(GLFW_KEY_D);
+    input.RemoveKeyToTrack(GLFW_KEY_F1);
 }
 
 StateAction GSPlay::Update(float deltaTime, GLFWwindow *window)

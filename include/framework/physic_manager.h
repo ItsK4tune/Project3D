@@ -4,7 +4,7 @@
 
 using namespace physx;
 
-class PhysicManager
+class PhysicManager : public PxSimulationEventCallback
 {
 public:
     static PhysicManager& Instance();
@@ -20,6 +20,14 @@ public:
 
     void RemoveActor(PxActor* actor);
     void RemoveAllActors();
+
+    void onTrigger(PxTriggerPair* pairs, PxU32 count) override;
+    void onContact(const PxContactPairHeader&, const PxContactPair*, PxU32) override {}
+
+    void onConstraintBreak(PxConstraintInfo*, PxU32) override {}
+    void onWake(PxActor**, PxU32) override {}
+    void onSleep(PxActor**, PxU32) override {}
+    void onAdvance(const PxRigidBody* const*, const PxTransform*, const PxU32) override {}
 
 private:
     PhysicManager();
