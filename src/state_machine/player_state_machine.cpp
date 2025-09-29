@@ -4,7 +4,6 @@
 
 void PlayerStateMachine::HandleAction(const StateAction &action)
 {
-    std::cout << action.nextState << std::endl;
     switch (action.type)
     {
     case StateActionType::None:
@@ -13,7 +12,6 @@ void PlayerStateMachine::HandleAction(const StateAction &action)
         if (action.nextState == "PSMove")
         {
             Push(std::make_unique<PSMove>());
-            
         } else
         {
             std::cout << "[PlayerStateMachine::HandleAction] StateActionType::Push: Not implemented yet." << std::endl;

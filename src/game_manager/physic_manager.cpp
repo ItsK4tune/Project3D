@@ -30,6 +30,24 @@ PhysicManager::~PhysicManager()
         gFoundation->release();
 }
 
+static PxFilterFlags MyFilterShader(
+    PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+    PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+    PxPairFlags &pairFlags, const void *constantBlock, PxU32 constantBlockSize)
+{
+    bool ghost0 = (filterData0.word0 & 1);
+    bool ghost1 = (filterData1.word0 & 1);
+
+    if (ghost0 || ghost1)
+    {
+        pairFlags = PxPairFlag::eNOTIFY_TOUCH_FOUND | PxPairFlag::eNOTIFY_TOUCH_LOST | PxPairFlag::eNOTIFY_TOUCH_PERSISTS;
+        return PxFilterFlag::eDEFAULT;
+    }
+
+    pairFlags = PxPairFlag::eCONTACT_DEFAULT | PxPairFlag::eNOTIFY_TOUCH_FOUND | PxPairFlag::eNOTIFY_TOUCH_LOST;
+    return PxFilterFlag::eDEFAULT;
+}
+
 bool PhysicManager::Init()
 {
     gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
@@ -45,8 +63,7 @@ bool PhysicManager::Init()
     PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
     sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
     sceneDesc.cpuDispatcher = gDispatcher;
-    sceneDesc.filterShader = PxDefaultSimulationFilterShader;
-
+    sceneDesc.filterShader = MyFilterShader;
     sceneDesc.simulationEventCallback = this;
 
     gScene = gPhysics->createScene(sceneDesc);
@@ -105,23 +122,4 @@ void PhysicManager::RemoveAllActors()
     }
 
     std::cout << "[PhysX] Removed " << nbActors << " actors\n";
-}
-
-void PhysicManager::onTrigger(PxTriggerPair *pairs, PxU32 count)
-{
-    for (PxU32 i = 0; i < count; i++)
-    {
-        const PxTriggerPair &p = pairs[i];
-
-        if (p.status & PxPairFlag::eNOTIFY_TOUCH_FOUND)
-        {
-            std::cout << "[PhysX] Trigger ENTER: "
-                      << p.triggerActor << " với " << p.otherActor << "\n";
-        }
-        if (p.status & PxPairFlag::eNOTIFY_TOUCH_LOST)
-        {
-            std::cout << "[PhysX] Trigger EXIT: "
-                      << p.triggerActor << " với " << p.otherActor << "\n";
-        }
-    }
 }

@@ -69,6 +69,10 @@ void Entity::AttachRigidDynamic(float density)
         PxTransform localPose(PxVec3(center.x, center.y, center.z));
         shape->setLocalPose(localPose);
 
+        PxFilterData fd;
+        fd.word0 = isGhost ? 1 : 0; // bit0 = ghost flag
+        shape->setSimulationFilterData(fd);
+
         actor->attachShape(*shape);
         shape->release();
 
@@ -96,10 +100,14 @@ void Entity::AttachRigidStatic()
         PxShape *shape = physics->createShape(
             PxBoxGeometry(halfExtents.x, halfExtents.y, halfExtents.z),
             *physics->createMaterial(0.0f, 0.0f, 0.6f));
-        
+
         PxTransform localPose(PxVec3(center.x, center.y, center.z));
         shape->setLocalPose(localPose);
-        
+
+        PxFilterData fd;
+        fd.word0 = isGhost ? 1 : 0; // bit0 = ghost flag
+        shape->setSimulationFilterData(fd);
+
         actor->attachShape(*shape);
         shape->release();
 

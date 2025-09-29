@@ -11,6 +11,10 @@ public:
 
     void SetStatic() { isStatic = true; }
     std::vector<PxRigidActor *> GetActors() { return actors; }
+    void SetGhost(bool ghost) { isGhost = ghost; }
+    
+    bool IsStatic() const { return isStatic; }
+    bool IsGhost() const { return isGhost; }
 
     void AttachRigidDynamic(float density = 1.0f);
     void AttachRigidStatic();
@@ -27,5 +31,6 @@ public:
 
 protected:
     bool isStatic = false;
+    bool isGhost = false;
     std::vector<PxRigidActor *> actors;
 };
