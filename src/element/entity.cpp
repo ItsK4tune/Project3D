@@ -3,32 +3,32 @@
 #include <glm/gtx/quaternion.hpp>
 #include "entity.h"
 
-static inline AABB TransformAABB(const AABB &local, const glm::mat4 &transform)
-{
-    glm::vec3 corners[8] = {
-        {local.min.x, local.min.y, local.min.z},
-        {local.min.x, local.min.y, local.max.z},
-        {local.min.x, local.max.y, local.min.z},
-        {local.min.x, local.max.y, local.max.z},
-        {local.max.x, local.min.y, local.min.z},
-        {local.max.x, local.min.y, local.max.z},
-        {local.max.x, local.max.y, local.min.z},
-        {local.max.x, local.max.y, local.max.z}};
+// static inline AABB TransformAABB(const AABB &local, const glm::mat4 &transform)
+// {
+//     glm::vec3 corners[8] = {
+//         {local.min.x, local.min.y, local.min.z},
+//         {local.min.x, local.min.y, local.max.z},
+//         {local.min.x, local.max.y, local.min.z},
+//         {local.min.x, local.max.y, local.max.z},
+//         {local.max.x, local.min.y, local.min.z},
+//         {local.max.x, local.min.y, local.max.z},
+//         {local.max.x, local.max.y, local.min.z},
+//         {local.max.x, local.max.y, local.max.z}};
 
-    glm::vec3 newMin(std::numeric_limits<float>::max());
-    glm::vec3 newMax(-std::numeric_limits<float>::max());
+//     glm::vec3 newMin(std::numeric_limits<float>::max());
+//     glm::vec3 newMax(-std::numeric_limits<float>::max());
 
-    for (int i = 0; i < 8; i++)
-    {
-        glm::vec4 worldPos = transform * glm::vec4(corners[i], 1.0f);
-        glm::vec3 p = glm::vec3(worldPos);
+//     for (int i = 0; i < 8; i++)
+//     {
+//         glm::vec4 worldPos = transform * glm::vec4(corners[i], 1.0f);
+//         glm::vec3 p = glm::vec3(worldPos);
 
-        newMin = glm::min(newMin, p);
-        newMax = glm::max(newMax, p);
-    }
+//         newMin = glm::min(newMin, p);
+//         newMax = glm::max(newMax, p);
+//     }
 
-    return {newMin, newMax};
-}
+//     return {newMin, newMax};
+// }
 
 Entity::Entity(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t,
                const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
@@ -53,26 +53,41 @@ void Entity::AttachRigidDynamic(float density)
     if (!physics)
         return;
 
-    for (auto const &boundingBox : GetModel()->boundingBoxs)
+    for (auto const &obb : GetModel()->boundingBoxs)
     {
-        glm::vec3 center = (boundingBox.min + boundingBox.max) * 0.5f;
-        glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
+        // Lấy center và halfSize từ OBB local
+        glm::vec3 center = obb.center;
+        glm::vec3 halfSize = obb.halfSize;
+        glm::mat3 orientation = obb.orientation;
 
-        PxTransform transform(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
+        // Actor world pose (Entity position)
+        PxTransform actorPose(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
+        PxRigidDynamic *actor = physics->createRigidDynamic(actorPose);
 
-        PxRigidDynamic *actor = physics->createRigidDynamic(transform);
+        // PhysX shape = BoxGeometry
+        PxBoxGeometry geometry(
+            std::max(halfSize.x, 0.001f),
+            std::max(halfSize.y, 0.001f),
+            std::max(halfSize.z, 0.001f));
+        PxShape *shape = physics->createShape(geometry, *physics->createMaterial(0.0f, 0.0f, 0.6f));
 
-        PxShape *shape = physics->createShape(
-            PxBoxGeometry(halfExtents.x, halfExtents.y, halfExtents.z),
-            *physics->createMaterial(0.0f, 0.0f, 0.6f));
+        // Convert glm::mat3 orientation + glm::vec3 center => PxTransform local pose
+        PxMat33 pxOrientation(
+            PxVec3(orientation[0][0], orientation[1][0], orientation[2][0]),
+            PxVec3(orientation[0][1], orientation[1][1], orientation[2][1]),
+            PxVec3(orientation[0][2], orientation[1][2], orientation[2][2]));
 
         PxTransform localPose(PxVec3(center.x, center.y, center.z));
+        localPose.q = PxQuat(pxOrientation); // gán orientation
+
         shape->setLocalPose(localPose);
 
+        // Gán filter data (ghost flag)
         PxFilterData fd;
-        fd.word0 = isGhost ? 1 : 0; // bit0 = ghost flag
+        fd.word0 = isGhost ? 1 : 0;
         shape->setSimulationFilterData(fd);
 
+        // Attach
         actor->attachShape(*shape);
         shape->release();
 
@@ -88,26 +103,41 @@ void Entity::AttachRigidStatic()
     if (!physics)
         return;
 
-    for (auto const &boundingBox : GetModel()->boundingBoxs)
+    for (auto const &obb : GetModel()->boundingBoxs)
     {
-        glm::vec3 center = (boundingBox.min + boundingBox.max) * 0.5f;
-        glm::vec3 halfExtents = (boundingBox.max - boundingBox.min) * 0.5f;
+        // Lấy center và halfSize từ OBB local
+        glm::vec3 center = obb.center;
+        glm::vec3 halfSize = obb.halfSize;
+        glm::mat3 orientation = obb.orientation;
 
-        PxTransform transform(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
+        // Actor world pose (Entity position)
+        PxTransform actorPose(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
+        PxRigidStatic *actor = physics->createRigidStatic(actorPose);
 
-        PxRigidActor *actor = physics->createRigidStatic(transform);
+        // PhysX shape = BoxGeometry
+        PxBoxGeometry geometry(
+            std::max(halfSize.x, 0.001f),
+            std::max(halfSize.y, 0.001f),
+            std::max(halfSize.z, 0.001f));
+        PxShape *shape = physics->createShape(geometry, *physics->createMaterial(0.0f, 0.0f, 0.6f));
 
-        PxShape *shape = physics->createShape(
-            PxBoxGeometry(halfExtents.x, halfExtents.y, halfExtents.z),
-            *physics->createMaterial(0.0f, 0.0f, 0.6f));
+        // Convert glm::mat3 orientation + glm::vec3 center => PxTransform local pose
+        PxMat33 pxOrientation(
+            PxVec3(orientation[0][0], orientation[1][0], orientation[2][0]),
+            PxVec3(orientation[0][1], orientation[1][1], orientation[2][1]),
+            PxVec3(orientation[0][2], orientation[1][2], orientation[2][2]));
 
         PxTransform localPose(PxVec3(center.x, center.y, center.z));
+        localPose.q = PxQuat(pxOrientation); // gán orientation
+
         shape->setLocalPose(localPose);
 
+        // Gán filter data (ghost flag)
         PxFilterData fd;
-        fd.word0 = isGhost ? 1 : 0; // bit0 = ghost flag
+        fd.word0 = isGhost ? 1 : 0;
         shape->setSimulationFilterData(fd);
 
+        // Attach
         actor->attachShape(*shape);
         shape->release();
 

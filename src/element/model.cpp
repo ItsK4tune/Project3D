@@ -6,15 +6,6 @@ Model::Model(const std::string &i, const std::string &path)
     : id(i)
 {
     LoadModel(path);
-    CalculateBoundingBox();
-
-    for (const auto &mesh : hitboxMeshes)
-    {
-        for (const auto &vertex : mesh.vertices)
-        {
-            std::cout << "Hitbox Vertex: (" << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z << ")\n";
-        }
-    }
 }
 
 void Model::LoadModel(const std::string &path)
@@ -82,6 +73,26 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const
     std::vector<unsigned int> indices;
 
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(nodeTransform)));
+
+    if (isHitbox)
+    {
+        glm::vec3 minPoint(mesh->mVertices[0].x, mesh->mVertices[0].y, mesh->mVertices[0].z);
+        glm::vec3 maxPoint = minPoint;
+
+        for (unsigned int i = 1; i < mesh->mNumVertices; i++)
+        {
+            glm::vec3 v(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+            minPoint = glm::min(minPoint, v);
+            maxPoint = glm::max(maxPoint, v);
+        }
+
+        OBB obb;
+        obb.center = (minPoint + maxPoint) * 0.5f;
+        obb.halfSize = (maxPoint - minPoint) * 0.5f;
+        obb.orientation = glm::mat3(nodeTransform);
+
+        boundingBoxs.push_back(obb);
+    }
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
@@ -178,54 +189,4 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
             }
         }
     }
-}
-
-void Model::CalculateBoundingBox() 
-{ 
-    if (hitboxMeshes.empty()) 
-    { 
-        AABB boundingBox;
-        boundingBox.min = glm::vec3(-0.001f); 
-        boundingBox.max = glm::vec3(0.001f); 
-        boundingBoxs.push_back(boundingBox); 
-        return; 
-    } 
- 
-    for (const auto &mesh : hitboxMeshes) 
-    { 
-        if (mesh.vertices.empty()) 
-        {
-            AABB boundingBox;
-            boundingBox.min = glm::vec3(0.0f);
-            boundingBox.max = glm::vec3(0.0f);
-            boundingBoxs.push_back(boundingBox);
-            continue;
-        }
-
-        glm::vec3 minPoint = mesh.vertices[0].Position;
-        glm::vec3 maxPoint = mesh.vertices[0].Position;
- 
-        for (const auto &vertex : mesh.vertices) 
-        { 
-            minPoint = glm::min(minPoint, vertex.Position);
-            maxPoint = glm::max(maxPoint, vertex.Position);
-        } 
- 
-        AABB boundingBox;
-        boundingBox.min = minPoint; 
-        boundingBox.max = maxPoint; 
- 
-        const float epsilon = 0.001f; 
-        for (int i = 0; i < 3; i++) 
-        { 
-            if (std::abs(boundingBox.max[i] - boundingBox.min[i]) < epsilon) 
-            { 
-                float center = (boundingBox.min[i] + boundingBox.max[i]) * 0.5f;
-                boundingBox.min[i] = center - epsilon * 0.5f; 
-                boundingBox.max[i] = center + epsilon * 0.5f; 
-            } 
-        } 
- 
-        boundingBoxs.push_back(boundingBox); 
-    } 
 }

@@ -133,17 +133,17 @@ void SceneManager::LoadFromFile(const std::string &filePath)
 
             if (!model)
             {
-                std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing model: " << modelID << std::endl;
+                std::cerr << "[SceneManager::LoadFromFile] Player[" << id << "] missing model: " << modelID << std::endl;
                 continue;
             }
             if (!shader)
             {
-                std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing shader: " << shaderID << std::endl;
+                std::cerr << "[SceneManager::LoadFromFile] Player[" << id << "] missing shader: " << shaderID << std::endl;
                 continue;
             }
             if (!texture && textureID != "-1")
             {
-                std::cerr << "[SceneManager::LoadFromFile] Object[" << id << "] missing texture: " << textureID << std::endl;
+                std::cerr << "[SceneManager::LoadFromFile] Player[" << id << "] missing texture: " << textureID << std::endl;
                 continue;
             }
 

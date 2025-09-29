@@ -7,10 +7,11 @@
 #include <iostream>
 #include "mesh.h"
 
-struct AABB
+struct OBB
 {
-    glm::vec3 min;
-    glm::vec3 max;
+    glm::vec3 center;
+    glm::vec3 halfSize;
+    glm::mat3 orientation; 
 };
 
 class Model
@@ -18,7 +19,7 @@ class Model
 public:
     std::vector<Mesh> renderMeshes;
     std::vector<Mesh> hitboxMeshes;
-    std::vector<AABB> boundingBoxs;
+    std::vector<OBB> boundingBoxs;
 
     Model(const std::string &i, const std::string &path);
 
@@ -36,5 +37,4 @@ private:
     Mesh ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const glm::mat4 &nodeTransform = glm::mat4(1.0f));
 
     void ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiScene *scene);
-    void CalculateBoundingBox();
 };
