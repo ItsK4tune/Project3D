@@ -6,6 +6,18 @@ Model::Model(const std::string &i, const std::string &path)
     : id(i)
 {
     LoadModel(path);
+
+    for (auto &bone : boneInfoMap)
+    {
+        std::cout << "bonename: " << bone.first << " bone offset:\n";
+        const glm::mat4& m = bone.second.offset;
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 4; ++col) {
+            std::cout << m[col][row] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
 }
 
 void Model::LoadModel(const std::string &path)
@@ -170,13 +182,34 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
 {
     for (unsigned int boneIndex = 0; boneIndex < aimesh->mNumBones; ++boneIndex)
     {
-        int boneID = boneIndex;
-        aiBone *bone = aimesh->mBones[boneIndex];
+        aiBone *aiBone = aimesh->mBones[boneIndex];
+        std::string boneName(aiBone->mName.C_Str());
 
-        for (unsigned int weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex)
+        int boneID = -1;
+
+        // Nếu bone chưa có trong map → thêm mới
+        if (boneInfoMap.find(boneName) == boneInfoMap.end())
         {
-            unsigned int vertexId = bone->mWeights[weightIndex].mVertexId;
-            float weight = bone->mWeights[weightIndex].mWeight;
+            BoneInfo boneInfo;
+            boneInfo.offset = aiMat4ToGlm(aiBone->mOffsetMatrix);
+            boneInfoMap[boneName] = boneInfo;
+            boneID = boneCount;
+            boneIDMap[boneName] = boneCount;
+            boneCount++;
+        }
+        else
+        {
+            boneID = boneIDMap[boneName];
+        }
+
+        // Gán weight cho vertex
+        for (unsigned int weightIndex = 0; weightIndex < aiBone->mNumWeights; ++weightIndex)
+        {
+            unsigned int vertexId = aiBone->mWeights[weightIndex].mVertexId;
+            float weight = aiBone->mWeights[weightIndex].mWeight;
+
+            if (vertexId >= mesh.vertices.size())
+                continue;
 
             for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
             {

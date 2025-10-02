@@ -1,6 +1,6 @@
 #Model 3
 ID M_TEST
-FILE "resource/model/test.glb"
+FILE "resource/model/test2.glb"
 ID M_MAP
 FILE "resource/model/map.glb"
 ID M_CAR
