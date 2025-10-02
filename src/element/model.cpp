@@ -10,10 +10,12 @@ Model::Model(const std::string &i, const std::string &path)
     for (auto &bone : boneInfoMap)
     {
         std::cout << "bonename: " << bone.first << " bone offset:\n";
-        const glm::mat4& m = bone.second.offset;
-        for (int row = 0; row < 4; ++row) {
-            for (int col = 0; col < 4; ++col) {
-            std::cout << m[col][row] << " ";
+        const glm::mat4 &m = bone.second.offset;
+        for (int row = 0; row < 4; ++row)
+        {
+            for (int col = 0; col < 4; ++col)
+            {
+                std::cout << m[col][row] << " ";
             }
             std::cout << std::endl;
         }
@@ -79,33 +81,96 @@ void Model::ProcessNode(aiNode *node, const aiScene *scene, const glm::mat4 &par
     }
 }
 
+#include <cfloat>
+#include <glm/gtc/quaternion.hpp> // dùng glm::quat_cast
+
 Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const glm::mat4 &nodeTransform)
 {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(nodeTransform)));
+    const float EPS = 1e-6f;
 
     if (isHitbox)
     {
-        glm::vec3 minPoint(mesh->mVertices[0].x, mesh->mVertices[0].y, mesh->mVertices[0].z);
-        glm::vec3 maxPoint = minPoint;
+        // 1) compute min/max in mesh LOCAL space (don't multiply by normalMatrix!)
+        glm::vec3 minLocal(FLT_MAX);
+        glm::vec3 maxLocal(-FLT_MAX);
 
-        for (unsigned int i = 1; i < mesh->mNumVertices; i++)
+        for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
         {
-            glm::vec3 v(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-            minPoint = glm::min(minPoint, v);
-            maxPoint = glm::max(maxPoint, v);
+            glm::vec3 vLocal(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+            minLocal = glm::min(minLocal, vLocal);
+            maxLocal = glm::max(maxLocal, vLocal);
         }
 
+        glm::vec3 centerLocal = (minLocal + maxLocal) * 0.5f;
+        glm::vec3 halfSizeLocal = (maxLocal - minLocal) * 0.5f;
+
+        // 2) extract columns from nodeTransform (model-space transform for this node)
+        glm::vec3 col0 = glm::vec3(nodeTransform[0]); // column 0
+        glm::vec3 col1 = glm::vec3(nodeTransform[1]);
+        glm::vec3 col2 = glm::vec3(nodeTransform[2]);
+
+        // 3) scale per axis = length of columns (handles non-uniform scale)
+        glm::vec3 scaleVec(glm::length(col0), glm::length(col1), glm::length(col2));
+        if (scaleVec.x < EPS)
+            scaleVec.x = 1.0f;
+        if (scaleVec.y < EPS)
+            scaleVec.y = 1.0f;
+        if (scaleVec.z < EPS)
+            scaleVec.z = 1.0f;
+
+        // 4) normalize columns to get a basis (remove scale)
+        glm::vec3 c0n = col0 / scaleVec.x;
+        glm::vec3 c1n = col1 / scaleVec.y;
+        glm::vec3 c2n = col2 / scaleVec.z;
+
+        // Gram-Schmidt to ensure orthonormal axes
+        glm::vec3 x = glm::normalize(c0n);
+        glm::vec3 y = c1n - glm::dot(c1n, x) * x;
+        float ylen = glm::length(y);
+        if (ylen < EPS)
+        {
+            // pick arbitrary perpendicular
+            if (fabs(x.x) < 0.9f)
+                y = glm::normalize(glm::cross(x, glm::vec3(1, 0, 0)));
+            else
+                y = glm::normalize(glm::cross(x, glm::vec3(0, 1, 0)));
+        }
+        else
+        {
+            y = glm::normalize(y);
+        }
+        glm::vec3 z = glm::cross(x, y);
+
+        // keep handedness consistent with original c2n
+        if (glm::dot(z, c2n) < 0.0f)
+        {
+            z = -z;
+            y = glm::cross(z, x); // re-orthonormalize y
+        }
+
+        glm::mat3 orientation;
+        // glm::mat3 constructor takes columns as arguments
+        orientation = glm::mat3(x, y, z);
+
+        // 5) half size in world/model space = local halfSize * scaleVec (component-wise)
+        glm::vec3 halfSizeWorld = halfSizeLocal * scaleVec;
+
+        // 6) center in model space (apply full nodeTransform to local center)
+        glm::vec3 centerWorld = glm::vec3(nodeTransform * glm::vec4(centerLocal, 1.0f));
+
         OBB obb;
-        obb.center = (minPoint + maxPoint) * 0.5f;
-        obb.halfSize = (maxPoint - minPoint) * 0.5f;
-        obb.orientation = glm::mat3(nodeTransform);
+        obb.center = centerWorld;
+        obb.halfSize = halfSizeWorld;
+        obb.orientation = orientation;
 
         boundingBoxs.push_back(obb);
     }
 
+    // --- build mesh vertices (baked to model-space) ---
     for (unsigned int i = 0; i < mesh->mNumVertices; i++)
     {
         Vertex vertex;
@@ -118,10 +183,15 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const
 
         if (!isHitbox)
         {
-            glm::vec3 normal(mesh->mNormals[i].x,
-                             mesh->mNormals[i].y,
-                             mesh->mNormals[i].z);
-            vertex.Normal = glm::normalize(normalMatrix * normal);
+            if (mesh->HasNormals())
+            {
+                glm::vec3 normal(mesh->mNormals[i].x,
+                                 mesh->mNormals[i].y,
+                                 mesh->mNormals[i].z);
+                vertex.Normal = glm::normalize(normalMatrix * normal);
+            }
+            else
+                vertex.Normal = glm::vec3(0.0f, 1.0f, 0.0f); // fallback
 
             if (mesh->mTextureCoords[0])
                 vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x,
@@ -129,15 +199,23 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const
             else
                 vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
-            glm::vec3 tangent(mesh->mTangents[i].x,
-                              mesh->mTangents[i].y,
-                              mesh->mTangents[i].z);
-            glm::vec3 bitangent(mesh->mBitangents[i].x,
-                                mesh->mBitangents[i].y,
-                                mesh->mBitangents[i].z);
+            if (mesh->HasTangentsAndBitangents())
+            {
+                glm::vec3 tangent(mesh->mTangents[i].x,
+                                  mesh->mTangents[i].y,
+                                  mesh->mTangents[i].z);
+                glm::vec3 bitangent(mesh->mBitangents[i].x,
+                                    mesh->mBitangents[i].y,
+                                    mesh->mBitangents[i].z);
 
-            vertex.Tangent = glm::normalize(normalMatrix * tangent);
-            vertex.Bitangent = glm::normalize(normalMatrix * bitangent);
+                vertex.Tangent = glm::normalize(normalMatrix * tangent);
+                vertex.Bitangent = glm::normalize(normalMatrix * bitangent);
+            }
+            else
+            {
+                vertex.Tangent = glm::vec3(0.0f);
+                vertex.Bitangent = glm::vec3(0.0f);
+            }
         }
         else
         {
@@ -150,6 +228,7 @@ Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const
         vertices.push_back(vertex);
     }
 
+    // indices
     for (unsigned int i = 0; i < mesh->mNumFaces; i++)
     {
         aiFace face = mesh->mFaces[i];

@@ -3,33 +3,6 @@
 #include <glm/gtx/quaternion.hpp>
 #include "entity.h"
 
-// static inline AABB TransformAABB(const AABB &local, const glm::mat4 &transform)
-// {
-//     glm::vec3 corners[8] = {
-//         {local.min.x, local.min.y, local.min.z},
-//         {local.min.x, local.min.y, local.max.z},
-//         {local.min.x, local.max.y, local.min.z},
-//         {local.min.x, local.max.y, local.max.z},
-//         {local.max.x, local.min.y, local.min.z},
-//         {local.max.x, local.min.y, local.max.z},
-//         {local.max.x, local.max.y, local.min.z},
-//         {local.max.x, local.max.y, local.max.z}};
-
-//     glm::vec3 newMin(std::numeric_limits<float>::max());
-//     glm::vec3 newMax(-std::numeric_limits<float>::max());
-
-//     for (int i = 0; i < 8; i++)
-//     {
-//         glm::vec4 worldPos = transform * glm::vec4(corners[i], 1.0f);
-//         glm::vec3 p = glm::vec3(worldPos);
-
-//         newMin = glm::min(newMin, p);
-//         newMax = glm::max(newMax, p);
-//     }
-
-//     return {newMin, newMax};
-// }
-
 Entity::Entity(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t,
                const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
     : Object(i, m, s, t, pos, rot, scl) {}
@@ -55,39 +28,44 @@ void Entity::AttachRigidDynamic(float density)
 
     for (auto const &obb : GetModel()->boundingBoxs)
     {
-        // Lấy center và halfSize từ OBB local
-        glm::vec3 center = obb.center;
-        glm::vec3 halfSize = obb.halfSize;
-        glm::mat3 orientation = obb.orientation;
+        glm::vec3 center = obb.center;           // model-space center
+        glm::vec3 halfSize = obb.halfSize;       // already scaled in ProcessMesh
+        glm::mat3 orientation = obb.orientation; // orthonormal rotation matrix
 
-        // Actor world pose (Entity position)
         PxTransform actorPose(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
         PxRigidDynamic *actor = physics->createRigidDynamic(actorPose);
 
-        // PhysX shape = BoxGeometry
+        // Ensure extents > eps
+        const float eps = 1e-4f;
         PxBoxGeometry geometry(
-            std::max(halfSize.x, 0.001f),
-            std::max(halfSize.y, 0.001f),
-            std::max(halfSize.z, 0.001f));
+            std::max(halfSize.x, eps),
+            std::max(halfSize.y, eps),
+            std::max(halfSize.z, eps));
         PxShape *shape = physics->createShape(geometry, *physics->createMaterial(0.0f, 0.0f, 0.6f));
 
-        // Convert glm::mat3 orientation + glm::vec3 center => PxTransform local pose
-        PxMat33 pxOrientation(
-            PxVec3(orientation[0][0], orientation[1][0], orientation[2][0]),
-            PxVec3(orientation[0][1], orientation[1][1], orientation[2][1]),
-            PxVec3(orientation[0][2], orientation[1][2], orientation[2][2]));
+        // Convert glm::mat3 (orientation) -> glm::quat -> PxQuat
+        glm::quat gq = glm::quat_cast(orientation);
+        if (glm::length2(gq) < 1e-6f)
+            gq = glm::quat(1, 0, 0, 0); // fallback
+        gq = glm::normalize(gq);
+        PxQuat pxq((float)gq.x, (float)gq.y, (float)gq.z, (float)gq.w);
 
-        PxTransform localPose(PxVec3(center.x, center.y, center.z));
-        localPose.q = PxQuat(pxOrientation); // gán orientation
+        // local pose: center in model-space (shape local pose is relative to actor pose which we set to entity pos)
+        PxTransform localPose(PxVec3(center.x, center.y, center.z), pxq);
+
+        // sanity check: avoid invalid pose
+        if (!localPose.isValid())
+        {
+            localPose = PxTransform(PxVec3(center.x, center.y, center.z));
+        }
 
         shape->setLocalPose(localPose);
 
-        // Gán filter data (ghost flag)
+        // filter data
         PxFilterData fd;
         fd.word0 = isGhost ? 1 : 0;
         shape->setSimulationFilterData(fd);
 
-        // Attach
         actor->attachShape(*shape);
         shape->release();
 
@@ -105,39 +83,36 @@ void Entity::AttachRigidStatic()
 
     for (auto const &obb : GetModel()->boundingBoxs)
     {
-        // Lấy center và halfSize từ OBB local
         glm::vec3 center = obb.center;
         glm::vec3 halfSize = obb.halfSize;
         glm::mat3 orientation = obb.orientation;
 
-        // Actor world pose (Entity position)
         PxTransform actorPose(PxVec3(GetPosition().x, GetPosition().y, GetPosition().z));
         PxRigidStatic *actor = physics->createRigidStatic(actorPose);
 
-        // PhysX shape = BoxGeometry
+        const float eps = 1e-4f;
         PxBoxGeometry geometry(
-            std::max(halfSize.x, 0.001f),
-            std::max(halfSize.y, 0.001f),
-            std::max(halfSize.z, 0.001f));
+            std::max(halfSize.x, eps),
+            std::max(halfSize.y, eps),
+            std::max(halfSize.z, eps));
         PxShape *shape = physics->createShape(geometry, *physics->createMaterial(0.0f, 0.0f, 0.6f));
 
-        // Convert glm::mat3 orientation + glm::vec3 center => PxTransform local pose
-        PxMat33 pxOrientation(
-            PxVec3(orientation[0][0], orientation[1][0], orientation[2][0]),
-            PxVec3(orientation[0][1], orientation[1][1], orientation[2][1]),
-            PxVec3(orientation[0][2], orientation[1][2], orientation[2][2]));
+        glm::quat gq = glm::quat_cast(orientation);
+        if (glm::length2(gq) < 1e-6f)
+            gq = glm::quat(1, 0, 0, 0);
+        gq = glm::normalize(gq);
+        PxQuat pxq((float)gq.x, (float)gq.y, (float)gq.z, (float)gq.w);
 
-        PxTransform localPose(PxVec3(center.x, center.y, center.z));
-        localPose.q = PxQuat(pxOrientation); // gán orientation
+        PxTransform localPose(PxVec3(center.x, center.y, center.z), pxq);
+        if (!localPose.isValid())
+            localPose = PxTransform(PxVec3(center.x, center.y, center.z));
 
         shape->setLocalPose(localPose);
 
-        // Gán filter data (ghost flag)
         PxFilterData fd;
         fd.word0 = isGhost ? 1 : 0;
         shape->setSimulationFilterData(fd);
 
-        // Attach
         actor->attachShape(*shape);
         shape->release();
 
