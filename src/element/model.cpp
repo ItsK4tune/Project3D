@@ -1,25 +1,15 @@
 #include "model.h"
+#include <cfloat>
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include "animation.h"
 
 Model::Model(const std::string &i, const std::string &path)
     : id(i)
 {
     LoadModel(path);
-
-    for (auto &bone : boneInfoMap)
-    {
-        std::cout << "bonename: " << bone.first << " bone offset:\n";
-        const glm::mat4 &m = bone.second.offset;
-        for (int row = 0; row < 4; ++row)
-        {
-            for (int col = 0; col < 4; ++col)
-            {
-                std::cout << m[col][row] << " ";
-            }
-            std::cout << std::endl;
-        }
-    }
 }
 
 void Model::LoadModel(const std::string &path)
@@ -46,6 +36,13 @@ void Model::LoadModel(const std::string &path)
     }
 
     ProcessNode(scene->mRootNode, scene);
+
+    for (int i = 0; i < scene->mNumAnimations; i++)
+    {
+        aiAnimation *anim = scene->mAnimations[i];
+        std::shared_ptr<Animation> newAnim = std::make_shared<Animation>(anim, this, scene->mRootNode);
+        animations[newAnim->GetName()] = std::move(newAnim);
+    }
 }
 
 static glm::mat4 aiMat4ToGlm(const aiMatrix4x4 &m)
@@ -80,9 +77,6 @@ void Model::ProcessNode(aiNode *node, const aiScene *scene, const glm::mat4 &par
         ProcessNode(node->mChildren[i], scene, glmTransform);
     }
 }
-
-#include <cfloat>
-#include <glm/gtc/quaternion.hpp> // dùng glm::quat_cast
 
 Mesh Model::ProcessMesh(aiMesh *mesh, const aiScene *scene, bool isHitbox, const glm::mat4 &nodeTransform)
 {
@@ -259,19 +253,17 @@ void Model::DrawHitboxes()
 
 void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiScene *scene)
 {
-    for (unsigned int boneIndex = 0; boneIndex < aimesh->mNumBones; ++boneIndex)
+    for (unsigned int i = 0; i < aimesh->mNumBones; i++)
     {
-        aiBone *aiBone = aimesh->mBones[boneIndex];
-        std::string boneName(aiBone->mName.C_Str());
-
         int boneID = -1;
+        std::string boneName = aimesh->mBones[i]->mName.C_Str();
 
-        // Nếu bone chưa có trong map → thêm mới
-        if (boneInfoMap.find(boneName) == boneInfoMap.end())
+        if (boneIDMap.find(boneName) == boneIDMap.end())
         {
-            BoneInfo boneInfo;
-            boneInfo.offset = aiMat4ToGlm(aiBone->mOffsetMatrix);
-            boneInfoMap[boneName] = boneInfo;
+            BoneInfo bi;
+            bi.id = boneCount;
+            bi.offset = glm::transpose(glm::make_mat4(&aimesh->mBones[i]->mOffsetMatrix.a1));
+            boneInfoMap[boneName] = bi;
             boneID = boneCount;
             boneIDMap[boneName] = boneCount;
             boneCount++;
@@ -281,21 +273,22 @@ void Model::ExtractBoneWeightForVertices(Mesh &mesh, aiMesh *aimesh, const aiSce
             boneID = boneIDMap[boneName];
         }
 
-        // Gán weight cho vertex
-        for (unsigned int weightIndex = 0; weightIndex < aiBone->mNumWeights; ++weightIndex)
+        assert(boneID != -1);
+
+        auto weights = aimesh->mBones[i]->mWeights;
+        int numWeights = aimesh->mBones[i]->mNumWeights;
+
+        for (int j = 0; j < numWeights; j++)
         {
-            unsigned int vertexId = aiBone->mWeights[weightIndex].mVertexId;
-            float weight = aiBone->mWeights[weightIndex].mWeight;
+            int vertexID = weights[j].mVertexId;
+            float weight = weights[j].mWeight;
 
-            if (vertexId >= mesh.vertices.size())
-                continue;
-
-            for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+            for (int k = 0; k < MAX_BONE_INFLUENCE; k++)
             {
-                if (mesh.vertices[vertexId].BoneIDs[i] < 0)
+                if (mesh.vertices[vertexID].Weights[k] == 0.0f)
                 {
-                    mesh.vertices[vertexId].BoneIDs[i] = boneID;
-                    mesh.vertices[vertexId].Weights[i] = weight;
+                    mesh.vertices[vertexID].BoneIDs[k] = boneID;
+                    mesh.vertices[vertexID].Weights[k] = weight;
                     break;
                 }
             }

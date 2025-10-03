@@ -10,11 +10,9 @@
 
 struct BoneInfo
 {
+    int id;
     glm::mat4 offset;
-    glm::mat4 finalTransformation;
-
-    BoneInfo()
-        : offset(1.0f), finalTransformation(1.0f) {}
+    BoneInfo() : id(-1), offset(1.0f) {}
 };
 
 struct OBB
@@ -24,6 +22,8 @@ struct OBB
     glm::mat3 orientation;
 };
 
+class Animation;
+
 class Model
 {
 public:
@@ -31,6 +31,7 @@ public:
     std::vector<Mesh> hitboxMeshes;
     std::vector<OBB> boundingBoxs;
 
+    std::map<std::string, std::shared_ptr<Animation>> animations;
     std::map<std::string, BoneInfo> boneInfoMap;
     std::map<std::string, int> boneIDMap;
     int boneCount = 0;

@@ -6,8 +6,8 @@
 class Player : public Entity
 {
 public:
-    Player(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t,
-           const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl, std::shared_ptr<Camera> c);
+    Player(const std::string &i, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl,
+           std::shared_ptr<Camera> c, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t);
 
     std::shared_ptr<Camera> GetCamera() { return camera; }
     void AttachCamera(std::shared_ptr<Camera> c) { camera = c; }

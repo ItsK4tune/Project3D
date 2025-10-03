@@ -147,7 +147,7 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                 continue;
             }
 
-            auto player = std::make_shared<Player>(id, model, shader, texture, pos, rot, scale, camera);
+            auto player = std::make_shared<Player>(id, pos, rot, scale, camera, model, shader, texture);
             entities.push_back(player);
             player->AttachRigidDynamic(1.0f);
             player->LockRotation(true, true, true);
@@ -214,7 +214,7 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     continue;
                 }
 
-                auto entity = std::make_shared<Entity>(id, model, shader, texture, pos, rot, scale);
+                auto entity = std::make_shared<Entity>(id, pos, rot, scale, model, shader, texture);
                 entities.push_back(entity);
                 entity->AttachRigidStatic();
                 entity->SetStatic();
@@ -282,7 +282,7 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     continue;
                 }
 
-                auto entity = std::make_shared<Entity>(id, model, shader, texture, pos, rot, scale);
+                auto entity = std::make_shared<Entity>(id, pos, rot, scale, model, shader, texture);
                 entities.push_back(entity);
                 entity->AttachRigidDynamic(1.0f);
                 // entity->LockRotation(true, false, true);
@@ -334,7 +334,7 @@ void SceneManager::LoadFromFile(const std::string &filePath)
                     texture = ResourceManager::Instance().GetTexture(textureID);
                 auto shader = ResourceManager::Instance().GetShader(shaderID);
 
-                auto hud = std::make_shared<HUD>(id, model, shader, texture, pos, rot, scale);
+                auto hud = std::make_shared<HUD>(id, pos, rot, scale, model, shader, texture);
                 huds.push_back(hud);
             }
 

@@ -6,12 +6,15 @@
 Object::Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t)
     : id(i), model(m), shader(s), texture(t), position(0.0f), rotation(0.0f), scale(1.0f)
 {
+    animator = std::make_shared<Animator>(model->animations);
 }
 
-Object::Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
+Object::Object(const std::string &i, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl,
+               std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t)
     : id(i), model(m), shader(s), texture(t), position(pos), rotation(rot), scale(scl)
 {
-}    
+    animator = std::make_shared<Animator>(model->animations);
+}
 
 glm::mat4 Object::GetWorldMatrix() const
 {

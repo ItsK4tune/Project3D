@@ -5,14 +5,14 @@
 class Entity : public Object
 {
 public:
-    Entity(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t,
-           const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl);
+    Entity(const std::string &i, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl,
+           std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t);
     virtual ~Entity();
 
     void SetStatic() { isStatic = true; }
     std::vector<PxRigidActor *> GetActors() { return actors; }
     void SetGhost(bool ghost) { isGhost = ghost; }
-    
+
     bool IsStatic() const { return isStatic; }
     bool IsGhost() const { return isGhost; }
 

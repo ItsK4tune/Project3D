@@ -1,8 +1,9 @@
 #include "hud.h"
 #include "scene_manager.h"
 
-HUD::HUD(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl)
-    : Object(i, m, s, t, pos, rot, scl), isHolding(false), clickFunc(nullptr), hoverFunc(nullptr) {}
+HUD::HUD(const std::string &i, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl,
+         std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t)
+    : Object(i, pos, rot, scl, m, s, t), isHolding(false), clickFunc(nullptr), hoverFunc(nullptr) {}
 
 void HUD::SetOnClick(void (*function)())
 {
@@ -21,10 +22,10 @@ bool HUD::HandleTouchEvent(double x, double y, bool bIsPressed)
     auto hudPos = GetPosition();
     auto hudScale = GetScale();
 
-    float left   = hudPos.x - hudScale.x;
-    float right  = hudPos.x + hudScale.x;
+    float left = hudPos.x - hudScale.x;
+    float right = hudPos.x + hudScale.x;
     float bottom = hudPos.y - hudScale.y;
-    float top    = hudPos.y + hudScale.y;
+    float top = hudPos.y + hudScale.y;
 
     if (x >= left && x <= right && y >= bottom && y <= top)
     {
@@ -56,10 +57,10 @@ bool HUD::HandleHoverEvent(double x, double y)
     auto hudPos = GetPosition();
     auto hudScale = GetScale();
 
-    float left   = hudPos.x - hudScale.x;
-    float right  = hudPos.x + hudScale.x;
+    float left = hudPos.x - hudScale.x;
+    float right = hudPos.x + hudScale.x;
     float bottom = hudPos.y - hudScale.y;
-    float top    = hudPos.y + hudScale.y;
+    float top = hudPos.y + hudScale.y;
 
     if (x >= left && x <= right && y >= bottom && y <= top)
     {

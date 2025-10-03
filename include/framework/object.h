@@ -4,12 +4,14 @@
 #include "model.h"
 #include "shader.h"
 #include "texture.h"
+#include "animator.h"
 
 class Object
 {
 public:
     Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t);
-    Object(const std::string &i, std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl);
+    Object(const std::string &i, const glm::vec3 &pos, const glm::vec3 &rot, const glm::vec3 &scl,
+           std::shared_ptr<Model> m, std::shared_ptr<Shader> s, std::shared_ptr<Texture> t);
 
     void SetID(const std::string &id) { this->id = id; }
     void SetPosition(const glm::vec3 &pos) { position = pos; }
@@ -30,6 +32,7 @@ public:
     glm::mat4 GetWorldMatrix() const;
     bool IsActive() const { return isActive; }
 
+    void PlayAnimation(const std::string &name) {};
     void Draw(const glm::mat4 &viewMatrix, const glm::mat4 &projectionMatrix);
 
 private:
@@ -37,6 +40,7 @@ private:
     std::shared_ptr<Model> model;
     std::shared_ptr<Texture> texture;
     std::shared_ptr<Shader> shader;
+    std::shared_ptr<Animator> animator;
 
     glm::vec3 position;
     glm::vec3 rotation;
